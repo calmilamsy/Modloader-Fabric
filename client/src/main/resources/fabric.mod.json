@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "modloader",
+  "version": "${version}",
+
+  "name": "Test Mod",
+  "description": "An Test Mod for Beta",
+  "authors": [
+    "calmilamsy"
+  ],
+  "contact": {
+    "sources": "https://github.com/js6pak/beta-example-mod"
+  },
+
+  "license": "CC0-1.0",
+  "icon": "assets/modloader/icon.png",
+
+  "environment": "*",
+  "mixins": [
+    "examplemod.mixins.json"
+  ],
+
+  "depends": {
+  }
+}

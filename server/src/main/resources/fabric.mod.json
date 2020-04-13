@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "examplemod",
+  "version": "${version}",
+
+  "name": "Example Mod",
+  "description": "An Example Mod for Beta",
+  "authors": [
+    "Earthcomputer",
+    "js6pak"
+  ],
+  "contact": {
+    "sources": "https://github.com/js6pak/beta-example-mod"
+  },
+
+  "license": "CC0-1.0",
+  "icon": "assets/examplemod/icon.png",
+
+  "environment": "*",
+  "mixins": [
+    "examplemod.mixins.json"
+  ],
+
+  "depends": {
+  }
+}

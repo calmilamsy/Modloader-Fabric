@@ -1,0 +1,9 @@
+minecraft {
+    side = "client"
+}
+
+dependencies {
+    //to change the versions see the gradle.properties file
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings loom.mcp(loom.BETA, "${project.minecraft_version}.client-LTS", "https://github.com/ModificationStation/1.7.3-LTS/archive/master.zip") { spec -> spec.conf = "1.7.3-LTS-master/conf/b1.7.3" }
+}

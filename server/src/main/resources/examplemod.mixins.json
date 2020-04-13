@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "net.glasslauncher.testmod.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+  ],
+  "server": [
+    "MixinMinecraftServer",
+    "MixinFixAuth"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
