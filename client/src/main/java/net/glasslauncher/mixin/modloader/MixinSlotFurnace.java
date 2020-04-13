@@ -14,10 +14,10 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public abstract class MixinSlotFurnace {
 
     @Shadow
-    public abstract void onPickupFromSlot(ItemStack itemStack);
+    private EntityPlayer thePlayer;
 
     @Shadow
-    private EntityPlayer thePlayer;
+    public abstract void onPickupFromSlot(ItemStack itemStack);
 
     @Redirect(method = "onPickupFromSlot", at = @At(target = "Lnet/minecraft/src/Slot;onPickupFromSlot(Lnet/minecraft/src/ItemStack;)V", value = "INVOKE"))
     public void onPickupFromSlot(Slot slot, ItemStack itemStack) {

@@ -2,6 +2,7 @@ package net.glasslauncher.mixin.playerapi;
 
 import net.glasslauncher.playerapi.EntityPlayerSPAccessor;
 import net.glasslauncher.playerapi.PlayerAPI;
+import net.minecraft.client.Minecraft;
 import net.minecraft.src.*;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -18,18 +19,24 @@ import java.util.Random;
 @Mixin(EntityPlayerSP.class)
 public abstract class MixinEntityPlayerSP extends EntityPlayer implements EntityPlayerSPAccessor {
 
-    private List playerBases = new ArrayList();
+    @Shadow
+    private MouseFilter field_21903_bJ;
 
-    @Shadow public MovementInput movementInput;
+    @Shadow
+    private MouseFilter field_21904_bK;
 
-    @Shadow private MouseFilter field_21903_bJ;
+    @Shadow
+    private MouseFilter field_21902_bL;
 
-    @Shadow private MouseFilter field_21904_bK;
-
-    @Shadow private MouseFilter field_21902_bL;
+    private List playerBases;
 
     public MixinEntityPlayerSP(World world) {
         super(world);
+    }
+
+    @Inject(method = "<init>", at = @At("TAIL"))
+    private void initEnd(Minecraft minecraft, World world, Session session, int i, CallbackInfo ci) {
+        playerBases = new ArrayList();
         field_21903_bJ = new MouseFilter();
         field_21904_bK = new MouseFilter();
         field_21902_bL = new MouseFilter();
@@ -41,11 +48,12 @@ public abstract class MixinEntityPlayerSP extends EntityPlayer implements Entity
         return playerBases;
     }
 
-    @Shadow public abstract void readEntityFromNBT(NBTTagCompound nbtTagCompound);
+    @Shadow
+    public abstract void readEntityFromNBT(NBTTagCompound nbtTagCompound);
 
     @Inject(method = "moveEntity", at = @At("HEAD"), cancellable = true)
     private void onMoveEntity(double v, double v1, double v2, CallbackInfo ci) {
-        if (PlayerAPI.moveEntity((EntityPlayerSP) (Object) this,v, v1, v2)) {
+        if (PlayerAPI.moveEntity((EntityPlayerSP) (Object) this, v, v1, v2)) {
             ci.cancel();
         }
     }
@@ -136,7 +144,7 @@ public abstract class MixinEntityPlayerSP extends EntityPlayer implements Entity
 
     @Inject(method = "isSneaking", at = @At("RETURN"), cancellable = true)
     private void isIsSneaking(CallbackInfoReturnable<Boolean> cir) {
-            cir.setReturnValue(PlayerAPI.isSneaking((EntityPlayerSP) (Object) this, cir.getReturnValue()));
+        cir.setReturnValue(PlayerAPI.isSneaking((EntityPlayerSP) (Object) this, cir.getReturnValue()));
     }
 
     @Override
@@ -179,8 +187,7 @@ public abstract class MixinEntityPlayerSP extends EntityPlayer implements Entity
         PlayerAPI.afterUpdate((EntityPlayerSP) (Object) this);
     }
 
-    public void superMoveFlying(float f, float f1, float f2)
-    {
+    public void superMoveFlying(float f, float f1, float f2) {
         super.moveFlying(f, f1, f2);
     }
 
@@ -197,52 +204,42 @@ public abstract class MixinEntityPlayerSP extends EntityPlayer implements Entity
     public EnumStatus sleepInBedAt(int i, int i1, int i2) {
         PlayerAPI.beforeSleepInBedAt((EntityPlayerSP) (Object) this, i, i1, i2);
         EnumStatus enumstatus = PlayerAPI.sleepInBedAt((EntityPlayerSP) (Object) this, i, i1, i2);
-        if(enumstatus == null)
-        {
+        if (enumstatus == null) {
             return super.sleepInBedAt(i, i1, i2);
-        } else
-        {
+        } else {
             return enumstatus;
         }
     }
 
-    public void doFall(float fallDist)
-    {
+    public void doFall(float fallDist) {
         super.fall(fallDist);
     }
 
-    public float getFallDistance()
-    {
+    public float getFallDistance() {
         return fallDistance;
     }
 
-    public boolean getSleeping()
-    {
-        return sleeping;
-    }
-
-    public boolean getJumping()
-    {
-        return isJumping;
-    }
-
-    public void doJump()
-    {
-        jump();
-    }
-
-    public Random getRandom()
-    {
-        return rand;
-    }
-
-    public void setFallDistance(float f)
-    {
+    public void setFallDistance(float f) {
         fallDistance = f;
     }
 
-    public void setYSize(float f)
-    {
+    public boolean getSleeping() {
+        return sleeping;
+    }
+
+    public boolean getJumping() {
+        return isJumping;
+    }
+
+    public void doJump() {
+        jump();
+    }
+
+    public Random getRandom() {
+        return rand;
+    }
+
+    public void setYSize(float f) {
         ySize = f;
     }
 
@@ -258,8 +255,7 @@ public abstract class MixinEntityPlayerSP extends EntityPlayer implements Entity
         return PlayerAPI.isOnLadder((EntityPlayerSP) (Object) this, super.isOnLadder());
     }
 
-    public void setActionState(float newMoveStrafing, float newMoveForward, boolean newIsJumping)
-    {
+    public void setActionState(float newMoveStrafing, float newMoveForward, boolean newIsJumping) {
         moveStrafing = newMoveStrafing;
         moveForward = newMoveForward;
         isJumping = newIsJumping;
@@ -284,18 +280,15 @@ public abstract class MixinEntityPlayerSP extends EntityPlayer implements Entity
         }
     }
 
-    public boolean superIsInsideOfMaterial(Material material)
-    {
+    public boolean superIsInsideOfMaterial(Material material) {
         return super.isInsideOfMaterial(material);
     }
 
-    public float superGetEntityBrightness(float f)
-    {
+    public float superGetEntityBrightness(float f) {
         return super.getEntityBrightness(f);
     }
 
-    public void sendChatMessage(String s)
-    {
+    public void sendChatMessage(String s) {
         PlayerAPI.sendChatMessage((EntityPlayerSP) (Object) this, s);
     }
 
@@ -308,13 +301,11 @@ public abstract class MixinEntityPlayerSP extends EntityPlayer implements Entity
         return super.getHurtSound();
     }
 
-    public String superGetHurtSound()
-    {
+    public String superGetHurtSound() {
         return super.getHurtSound();
     }
 
-    public float superGetCurrentPlayerStrVsBlock(Block block)
-    {
+    public float superGetCurrentPlayerStrVsBlock(Block block) {
         return super.getCurrentPlayerStrVsBlock(block);
     }
 
@@ -329,112 +320,94 @@ public abstract class MixinEntityPlayerSP extends EntityPlayer implements Entity
     }
 
     @Override
-    protected void fall(float f)
-    {
-        if(!PlayerAPI.fall((EntityPlayerSP) (Object) this, f))
-        {
+    protected void fall(float f) {
+        if (!PlayerAPI.fall((EntityPlayerSP) (Object) this, f)) {
             super.fall(f);
         }
     }
 
-    public void superFall(float f)
-    {
+    public void superFall(float f) {
         super.fall(f);
     }
 
     @Override
-    protected void jump()
-    {
-        if(!PlayerAPI.jump((EntityPlayerSP) (Object) this))
-        {
+    protected void jump() {
+        if (!PlayerAPI.jump((EntityPlayerSP) (Object) this)) {
             super.jump();
         }
     }
 
-    public void superJump()
-    {
+    public void superJump() {
         super.jump();
     }
 
     @Override
-    protected void damageEntity(int i)
-    {
-        if(!PlayerAPI.damageEntity((EntityPlayerSP) (Object) this, i))
-        {
+    protected void damageEntity(int i) {
+        if (!PlayerAPI.damageEntity((EntityPlayerSP) (Object) this, i)) {
             super.damageEntity(i);
         }
     }
 
-    protected void superDamageEntity(int i)
-    {
+    protected void superDamageEntity(int i) {
         super.damageEntity(i);
     }
 
     @Override
     public double getDistanceSqToEntity(Entity entity) {
         Double result = PlayerAPI.getDistanceSqToEntity((EntityPlayerSP) (Object) this, entity);
-        if(result != null) {
+        if (result != null) {
             return result;
         }
         return super.getDistanceSqToEntity(entity);
     }
 
-    public double superGetDistanceSqToEntity(Entity entity)
-    {
+    public double superGetDistanceSqToEntity(Entity entity) {
         return super.getDistanceSqToEntity(entity);
     }
 
-    public void attackTargetEntityWithCurrentItem(Entity entity)
-    {
-        if(!PlayerAPI.attackTargetEntityWithCurrentItem((EntityPlayerSP) (Object) this, entity))
-        {
+    public void attackTargetEntityWithCurrentItem(Entity entity) {
+        if (!PlayerAPI.attackTargetEntityWithCurrentItem((EntityPlayerSP) (Object) this, entity)) {
             super.attackTargetEntityWithCurrentItem(entity);
         }
     }
 
-    public void superAttackTargetEntityWithCurrentItem(Entity entity)
-    {
+    public void superAttackTargetEntityWithCurrentItem(Entity entity) {
         super.attackTargetEntityWithCurrentItem(entity);
     }
 
     @Override
     public boolean handleWaterMovement() {
         Boolean result = PlayerAPI.handleWaterMovement((EntityPlayerSP) (Object) this);
-        if(result != null) {
+        if (result != null) {
             return result;
         }
         return super.handleWaterMovement();
     }
 
-    public boolean superHandleWaterMovement()
-    {
+    public boolean superHandleWaterMovement() {
         return super.handleWaterMovement();
     }
 
     @Override
     public boolean handleLavaMovement() {
         Boolean result = PlayerAPI.handleLavaMovement((EntityPlayerSP) (Object) this);
-        if(result != null) {
+        if (result != null) {
             return result;
         }
         return super.handleLavaMovement();
     }
 
-    public boolean superHandleLavaMovement()
-    {
+    public boolean superHandleLavaMovement() {
         return super.handleLavaMovement();
     }
 
-    public void dropPlayerItemWithRandomChoice(ItemStack itemstack, boolean flag)
-    {
-        if(!PlayerAPI.dropPlayerItemWithRandomChoice((EntityPlayerSP) (Object) this, itemstack, flag))
-        {
+    public void dropPlayerItemWithRandomChoice(ItemStack itemstack, boolean flag) {
+        if (!PlayerAPI.dropPlayerItemWithRandomChoice((EntityPlayerSP) (Object) this, itemstack, flag)) {
             super.dropPlayerItemWithRandomChoice(itemstack, flag);
         }
     }
 
-    public void superDropPlayerItemWithRandomChoice(ItemStack itemstack, boolean flag)
-    {
+    public void superDropPlayerItemWithRandomChoice(ItemStack itemstack, boolean flag) {
         super.dropPlayerItemWithRandomChoice(itemstack, flag);
     }
 }

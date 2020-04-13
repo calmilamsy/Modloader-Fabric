@@ -10,27 +10,6 @@ public class Config {
     // Path for cache and config to be stored.
     public transient static final String cachepath = getAppDir("Glass-Launcher").toString() + "/glass/netfix/";
     public transient static final String confpath = getAppDir("minecraft").toString() + "/config/glass-netfix/";
-
-    @SerializedName("skinagelimit")
-    @Getter
-    private static long skinAgeLimit = 1800L;
-
-    @SerializedName("docape")
-    @Getter
-    private boolean doCape = true;
-
-    @SerializedName("dosound")
-    @Getter
-    private boolean doSound = true;
-
-    @SerializedName("doskin")
-    @Getter
-    private boolean doSkin = true;
-
-    @SerializedName("doauth")
-    @Getter
-    private boolean doAuth = true;
-
     public transient static final HashMap<String, String> depsList = new HashMap<String, String>() {{
         put("littleproxy.jar", "https://github.com/adamfisk/LittleProxy/releases/download/littleproxy-1.1.2/littleproxy-1.1.2-littleproxy-shade.jar,05613C6D1BB1A8F826711BA54569311E");
         put("littleproxy-mitm.jar", "https://repo1.maven.org/maven2/com/github/ganskef/littleproxy-mitm/1.1.0/littleproxy-mitm-1.1.0.jar,B1FD7C2BFCD32BCF5873D298484DABBA");
@@ -40,6 +19,21 @@ public class Config {
         put("commons-io.jar", "https://repo1.maven.org/maven2/commons-io/commons-io/2.4/commons-io-2.4.jar,7F97854DC04C119D461FED14F5D8BB96");
         put("gson.jar", "https://repo1.maven.org/maven2/com/google/code/gson/gson/2.8.6/gson-2.8.6.jar,310f5841387183aca7900fead98d4858");
     }};
+    @SerializedName("skinagelimit")
+    @Getter
+    private static long skinAgeLimit = 1800L;
+    @SerializedName("docape")
+    @Getter
+    private boolean doCape = true;
+    @SerializedName("dosound")
+    @Getter
+    private boolean doSound = true;
+    @SerializedName("doskin")
+    @Getter
+    private boolean doSkin = true;
+    @SerializedName("doauth")
+    @Getter
+    private boolean doAuth = true;
 
     // Snippets copied from Minecraft.class
 

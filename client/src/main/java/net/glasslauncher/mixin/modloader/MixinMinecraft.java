@@ -10,7 +10,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(Minecraft.class)
 public abstract class MixinMinecraft {
 
-    @Shadow protected abstract void checkGLError(String s);
+    @Shadow
+    protected abstract void checkGLError(String s);
 
     @Redirect(method = "startGame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;checkGLError(Ljava/lang/String;)V"))
     public void startGame(Minecraft minecraft, String text) {

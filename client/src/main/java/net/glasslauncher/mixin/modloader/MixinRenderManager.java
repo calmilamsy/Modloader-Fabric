@@ -15,7 +15,8 @@ import java.util.Map;
 @Mixin(RenderManager.class)
 public class MixinRenderManager {
 
-    @Shadow private Map entityRenderMap;
+    @Shadow
+    private Map entityRenderMap;
 
     @Inject(method = "<init>()V", at = @At(value = "TAIL"))
     public void init(CallbackInfo ci) {
@@ -23,8 +24,8 @@ public class MixinRenderManager {
         Iterator iterator = entityRenderMap.values().iterator();
 
         ModLoader.addAllRenderers(entityRenderMap);
-        while(iterator.hasNext()) {
-            Render var2 = (Render)iterator.next();
+        while (iterator.hasNext()) {
+            Render var2 = (Render) iterator.next();
             var2.setRenderManager((RenderManager) (Object) this);
         }
     }

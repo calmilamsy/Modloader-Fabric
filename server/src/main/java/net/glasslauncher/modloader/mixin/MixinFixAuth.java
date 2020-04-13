@@ -44,7 +44,7 @@ public class MixinFixAuth {
     }
 
     @Shadow(aliases = "loginPacket")
-    final Packet1Login loginPacket;
+    Packet1Login loginPacket;
     @Shadow(aliases = "loginHandler")
-    final NetLoginHandler loginHandler;
+    NetLoginHandler loginHandler;
 }

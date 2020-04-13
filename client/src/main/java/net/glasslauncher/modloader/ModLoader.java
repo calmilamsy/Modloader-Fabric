@@ -2,8 +2,8 @@ package net.glasslauncher.modloader;
 
 
 import lombok.Getter;
-import net.glasslauncher.utils.Classpath;
 import net.glasslauncher.mixin.CraftingManagerAccessor;
+import net.glasslauncher.utils.Classpath;
 import net.minecraft.client.Minecraft;
 import net.minecraft.src.*;
 import org.lwjgl.input.Keyboard;
@@ -28,6 +28,81 @@ import java.util.zip.ZipInputStream;
 
 public class ModLoader {
 
+    public static final boolean DEBUG = false;
+
+    /* BEGIN MODLOADER */
+    public static final Properties props = new Properties();
+    public static final String VERSION = "ModLoader Beta 1.7.3";
+    private static final List animList = new LinkedList();
+    private static final Map blockModels = new HashMap();
+    private static final Map blockSpecialInv = new HashMap();
+    private static final File cfgdir;
+    private static final File cfgfile;
+    private static final Map inGameHooks = new HashMap();
+    private static final Map inGUIHooks = new HashMap();
+    private static final Map keyList = new HashMap();
+    private static final File logfile = new File(Minecraft.getMinecraftDir(), "ModLoader.txt");
+    private static final Logger logger = Logger.getLogger("ModLoader");
+    private static final File modDir = new File(Minecraft.getMinecraftDir(), "/mods/");
+    private static final File remappedModDir = new File(modDir, "/remappedmods/");
+    private static final LinkedList modList = new LinkedList();
+    private static final Map overrides = new HashMap();
+    private static final boolean[] usedItemSprites = new boolean[256];
+    private static final boolean[] usedTerrainSprites = new boolean[256];
+    public static Level cfgLoggingLevel;
+    public static boolean hasInit = false;
+    private static Map classMap = null;
+    private static long clock = 0L;
+    private static Field field_animList = null;
+    private static Field field_armorList = null;
+    private static Field field_blockList = null;
+    private static Field field_modifiers = null;
+    private static Field field_TileEntityRenderers = null;
+    private static int highestEntityId = 3000;
+    private static Minecraft instance = null;
+    private static int itemSpriteIndex = 0;
+    private static int itemSpritesLeft = 0;
+    private static FileHandler logHandler = null;
+    private static Method method_RegisterEntityID = null;
+    private static Method method_RegisterTileEntity = null;
+    private static int nextBlockModelID = 1000;
+    private static BiomeGenBase[] standardBiomes;
+    private static int terrainSpriteIndex = 0;
+    private static int terrainSpritesLeft = 0;
+    private static String texPack = null;
+    private static boolean texturesAdded = false;
+    @Getter
+    private static float[][] redstoneColors;
+
+    static {
+        cfgdir = new File(Minecraft.getMinecraftDir(), "/config/");
+        cfgfile = new File(cfgdir, "ModLoader.cfg");
+        cfgLoggingLevel = Level.FINER;
+
+        redstoneColors = new float[16][];
+        for (int i = 0; i < redstoneColors.length; i++) {
+            float j = (float) i / 15F;
+            float red = j * 0.6F + 0.4F;
+            if (i == 0) {
+                j = 0.0F;
+            }
+            float green = j * j * 0.7F - 0.5F;
+            float blue = j * j * 0.6F - 0.7F;
+            if (green < 0.0F) {
+                green = 0.0F;
+            }
+            if (blue < 0.0F) {
+                blue = 0.0F;
+            }
+            redstoneColors[i] = (new float[]{
+                    red, green, blue
+            });
+        }
+    }
+
+    private ModLoader() {
+    }
+
     public static void setRedstoneColors(float[][] colors) {
         if (colors.length != 16) {
             throw new IllegalArgumentException("Must be 16 colors.");
@@ -40,8 +115,6 @@ public class ModLoader {
 
         redstoneColors = colors;
     }
-
-    /* BEGIN MODLOADER */
 
     public static void addAchievementDesc(Achievement achievement, String name, String description) {
         try {
@@ -1148,79 +1221,5 @@ public class ModLoader {
 
     private static void throwException(Throwable e) {
         throwException("Exception occured in ModLoader", e);
-    }
-
-    private ModLoader() {
-    }
-
-    private static final List animList = new LinkedList();
-    private static final Map blockModels = new HashMap();
-    private static final Map blockSpecialInv = new HashMap();
-    private static final File cfgdir;
-    private static final File cfgfile;
-    public static Level cfgLoggingLevel;
-    private static Map classMap = null;
-    private static long clock = 0L;
-    public static final boolean DEBUG = false;
-    private static Field field_animList = null;
-    private static Field field_armorList = null;
-    private static Field field_blockList = null;
-    private static Field field_modifiers = null;
-    private static Field field_TileEntityRenderers = null;
-    public static boolean hasInit = false;
-    private static int highestEntityId = 3000;
-    private static final Map inGameHooks = new HashMap();
-    private static final Map inGUIHooks = new HashMap();
-    private static Minecraft instance = null;
-    private static int itemSpriteIndex = 0;
-    private static int itemSpritesLeft = 0;
-    private static final Map keyList = new HashMap();
-    private static final File logfile = new File(Minecraft.getMinecraftDir(), "ModLoader.txt");
-    private static final Logger logger = Logger.getLogger("ModLoader");
-    private static FileHandler logHandler = null;
-    private static Method method_RegisterEntityID = null;
-    private static Method method_RegisterTileEntity = null;
-    private static final File modDir = new File(Minecraft.getMinecraftDir(), "/mods/");
-    private static final File remappedModDir = new File(modDir, "/remappedmods/");
-    private static final LinkedList modList = new LinkedList();
-    private static int nextBlockModelID = 1000;
-    private static final Map overrides = new HashMap();
-    public static final Properties props = new Properties();
-    private static BiomeGenBase[] standardBiomes;
-    private static int terrainSpriteIndex = 0;
-    private static int terrainSpritesLeft = 0;
-    private static String texPack = null;
-    private static boolean texturesAdded = false;
-    private static final boolean[] usedItemSprites = new boolean[256];
-    private static final boolean[] usedTerrainSprites = new boolean[256];
-    public static final String VERSION = "ModLoader Beta 1.7.3";
-
-    @Getter
-    private static float[][] redstoneColors;
-
-    static {
-        cfgdir = new File(Minecraft.getMinecraftDir(), "/config/");
-        cfgfile = new File(cfgdir, "ModLoader.cfg");
-        cfgLoggingLevel = Level.FINER;
-
-        redstoneColors = new float[16][];
-        for (int i = 0; i < redstoneColors.length; i++) {
-            float j = (float) i / 15F;
-            float red = j * 0.6F + 0.4F;
-            if (i == 0) {
-                j = 0.0F;
-            }
-            float green = j * j * 0.7F - 0.5F;
-            float blue = j * j * 0.6F - 0.7F;
-            if (green < 0.0F) {
-                green = 0.0F;
-            }
-            if (blue < 0.0F) {
-                blue = 0.0F;
-            }
-            redstoneColors[i] = (new float[]{
-                    red, green, blue
-            });
-        }
     }
 }

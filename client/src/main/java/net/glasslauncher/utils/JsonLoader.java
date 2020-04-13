@@ -34,6 +34,12 @@ public class JsonLoader<T> {
         }
     }
 
+    public static String readFileToString(String path)
+            throws IOException {
+        byte[] encoded = Files.readAllBytes(Paths.get(path));
+        return new String(encoded, StandardCharsets.UTF_8);
+    }
+
     /**
      * Saves the JSON object stored in memory.
      *
@@ -47,11 +53,5 @@ public class JsonLoader<T> {
             e.printStackTrace();
         }
         return false;
-    }
-
-    public static String readFileToString(String path)
-            throws IOException {
-        byte[] encoded = Files.readAllBytes(Paths.get(path));
-        return new String(encoded, StandardCharsets.UTF_8);
     }
 }

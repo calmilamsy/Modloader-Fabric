@@ -12,6 +12,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(EntityPlayerSP.class)
 public class MixinFixPlayerSkins extends EntityPlayer {
 
+    public MixinFixPlayerSkins(World world) {
+        super(world);
+    }
+
     @Inject(method = "<init>", at = @At(value = "RETURN"))
     public void fixURLS(CallbackInfo callbackInfo) {
         try {
@@ -23,10 +27,6 @@ public class MixinFixPlayerSkins extends EntityPlayer {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public MixinFixPlayerSkins(World world) {
-        super(world);
     }
 
     @Override

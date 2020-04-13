@@ -5,11 +5,9 @@
   "mixins": [
   ],
   "client": [
+    "CraftingManagerAccessor",
     "EntityLivingAccessor",
     "EntityPlayerAccessor",
-    "playerapi.MixinEntityPlayerSP",
-    "playerapi.MixinEntityPlayerSP",
-    "CraftingManagerAccessor",
     "fixes.MixinFixAuth",
     "fixes.MixinFixDepthBuffer",
     "fixes.MixinFixPlayerSkins",
@@ -23,7 +21,9 @@
     "modloader.MixinRenderManager",
     "modloader.MixinSlotCrafting",
     "modloader.MixinSlotFurnace",
-    "modloader.MixinTileEntityFurnace"
+    "modloader.MixinTileEntityFurnace",
+    "playerapi.MixinEntityPlayerSP",
+    "audiomod.MixinAudioMod"
   ],
   "injectors": {
     "defaultRequire": 1

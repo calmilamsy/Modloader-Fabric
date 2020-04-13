@@ -12,14 +12,14 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(ChunkProvider.class)
 public class MixinChunkProvider {
 
+    @Shadow
+    private IChunkProvider chunkProvider;
+    @Shadow
+    private World worldObj;
+
     @Redirect(method = "populate", at = @At(value = "INVOKE", target = "Lnet/minecraft/src/IChunkProvider;populate(Lnet/minecraft/src/IChunkProvider;II)V"))
     public void populate(IChunkProvider ths, IChunkProvider iChunkProvider, int i, int i1) {
         chunkProvider.populate(iChunkProvider, i, i1);
         ModLoader.populateChunk(chunkProvider, i, i1, worldObj);
     }
-
-    @Shadow
-    private IChunkProvider chunkProvider;
-    @Shadow
-    private World worldObj;
 }

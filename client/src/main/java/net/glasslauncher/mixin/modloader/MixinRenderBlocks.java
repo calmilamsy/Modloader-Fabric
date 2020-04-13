@@ -16,6 +16,135 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinRenderBlocks {
 
     @Shadow
+    public boolean field_31088_b;
+    @Shadow
+    private IBlockAccess blockAccess;
+    @Shadow
+    private boolean flipTexture;
+    @Shadow
+    private boolean renderAllFaces;
+    @Shadow
+    private int overrideBlockTexture;
+    @Shadow
+    private int field_31087_g;
+    @Shadow
+    private int field_31086_h;
+    @Shadow
+    private int field_31085_i;
+    @Shadow
+    private int field_31084_j;
+    @Shadow
+    private int field_31083_k;
+    @Shadow
+    private int field_31082_l;
+    @Shadow
+    private boolean enableAO;
+    @Shadow
+    private float lightValueOwn;
+    @Shadow
+    private float aoLightValueXNeg;
+    @Shadow
+    private float aoLightValueYNeg;
+    @Shadow
+    private float aoLightValueZNeg;
+    @Shadow
+    private float aoLightValueXPos;
+    @Shadow
+    private float aoLightValueYPos;
+    @Shadow
+    private float aoLightValueZPos;
+    @Shadow
+    private float field_22377_m;
+    @Shadow
+    private float field_22376_n;
+    @Shadow
+    private float field_22375_o;
+    @Shadow
+    private float field_22374_p;
+    @Shadow
+    private float field_22373_q;
+    @Shadow
+    private float field_22372_r;
+    @Shadow
+    private float field_22371_s;
+    @Shadow
+    private float field_22370_t;
+    @Shadow
+    private float field_22369_u;
+    @Shadow
+    private float field_22368_v;
+    @Shadow
+    private float field_22367_w;
+    @Shadow
+    private float field_22366_x;
+    @Shadow
+    private float field_22365_y;
+    @Shadow
+    private float field_22364_z;
+    @Shadow
+    private float field_22362_A;
+    @Shadow
+    private float field_22360_B;
+    @Shadow
+    private float field_22358_C;
+    @Shadow
+    private float field_22356_D;
+    @Shadow
+    private float field_22354_E;
+    @Shadow
+    private float field_22353_F;
+    @Shadow
+    private int field_22352_G;
+    @Shadow
+    private float colorRedTopLeft;
+    @Shadow
+    private float colorRedBottomLeft;
+    @Shadow
+    private float colorRedBottomRight;
+    @Shadow
+    private float colorRedTopRight;
+    @Shadow
+    private float colorGreenTopLeft;
+    @Shadow
+    private float colorGreenBottomLeft;
+    @Shadow
+    private float colorGreenBottomRight;
+    @Shadow
+    private float colorGreenTopRight;
+    @Shadow
+    private float colorBlueTopLeft;
+    @Shadow
+    private float colorBlueBottomLeft;
+    @Shadow
+    private float colorBlueBottomRight;
+    @Shadow
+    private float colorBlueTopRight;
+    @Shadow
+    private boolean field_22339_T;
+    @Shadow
+    private boolean field_22338_U;
+    @Shadow
+    private boolean field_22337_V;
+    @Shadow
+    private boolean field_22336_W;
+    @Shadow
+    private boolean field_22335_X;
+    @Shadow
+    private boolean field_22334_Y;
+    @Shadow
+    private boolean field_22333_Z;
+    @Shadow
+    private boolean field_22363_aa;
+    @Shadow
+    private boolean field_22361_ab;
+    @Shadow
+    private boolean field_22359_ac;
+    @Shadow
+    private boolean field_22357_ad;
+    @Shadow
+    private boolean field_22355_ae;
+
+    @Shadow
     protected abstract boolean func_31080_c(Block block, int i, int i1, int i2, boolean b);
 
     @Shadow
@@ -216,133 +345,4 @@ public abstract class MixinRenderBlocks {
         block.setBlockBoundsBasedOnState(this.blockAccess, i, i1, i2);
         ModLoader.renderWorldBlock((RenderBlocks) (Object) this, blockAccess, i, i1, i2, block, block.getRenderType());
     }
-
-    @Shadow
-    private IBlockAccess blockAccess;
-    @Shadow
-    private boolean flipTexture;
-    @Shadow
-    private boolean renderAllFaces;
-    @Shadow
-    public boolean field_31088_b;
-    @Shadow
-    private int overrideBlockTexture;
-    @Shadow
-    private int field_31087_g;
-    @Shadow
-    private int field_31086_h;
-    @Shadow
-    private int field_31085_i;
-    @Shadow
-    private int field_31084_j;
-    @Shadow
-    private int field_31083_k;
-    @Shadow
-    private int field_31082_l;
-    @Shadow
-    private boolean enableAO;
-    @Shadow
-    private float lightValueOwn;
-    @Shadow
-    private float aoLightValueXNeg;
-    @Shadow
-    private float aoLightValueYNeg;
-    @Shadow
-    private float aoLightValueZNeg;
-    @Shadow
-    private float aoLightValueXPos;
-    @Shadow
-    private float aoLightValueYPos;
-    @Shadow
-    private float aoLightValueZPos;
-    @Shadow
-    private float field_22377_m;
-    @Shadow
-    private float field_22376_n;
-    @Shadow
-    private float field_22375_o;
-    @Shadow
-    private float field_22374_p;
-    @Shadow
-    private float field_22373_q;
-    @Shadow
-    private float field_22372_r;
-    @Shadow
-    private float field_22371_s;
-    @Shadow
-    private float field_22370_t;
-    @Shadow
-    private float field_22369_u;
-    @Shadow
-    private float field_22368_v;
-    @Shadow
-    private float field_22367_w;
-    @Shadow
-    private float field_22366_x;
-    @Shadow
-    private float field_22365_y;
-    @Shadow
-    private float field_22364_z;
-    @Shadow
-    private float field_22362_A;
-    @Shadow
-    private float field_22360_B;
-    @Shadow
-    private float field_22358_C;
-    @Shadow
-    private float field_22356_D;
-    @Shadow
-    private float field_22354_E;
-    @Shadow
-    private float field_22353_F;
-    @Shadow
-    private int field_22352_G;
-    @Shadow
-    private float colorRedTopLeft;
-    @Shadow
-    private float colorRedBottomLeft;
-    @Shadow
-    private float colorRedBottomRight;
-    @Shadow
-    private float colorRedTopRight;
-    @Shadow
-    private float colorGreenTopLeft;
-    @Shadow
-    private float colorGreenBottomLeft;
-    @Shadow
-    private float colorGreenBottomRight;
-    @Shadow
-    private float colorGreenTopRight;
-    @Shadow
-    private float colorBlueTopLeft;
-    @Shadow
-    private float colorBlueBottomLeft;
-    @Shadow
-    private float colorBlueBottomRight;
-    @Shadow
-    private float colorBlueTopRight;
-    @Shadow
-    private boolean field_22339_T;
-    @Shadow
-    private boolean field_22338_U;
-    @Shadow
-    private boolean field_22337_V;
-    @Shadow
-    private boolean field_22336_W;
-    @Shadow
-    private boolean field_22335_X;
-    @Shadow
-    private boolean field_22334_Y;
-    @Shadow
-    private boolean field_22333_Z;
-    @Shadow
-    private boolean field_22363_aa;
-    @Shadow
-    private boolean field_22361_ab;
-    @Shadow
-    private boolean field_22359_ac;
-    @Shadow
-    private boolean field_22357_ad;
-    @Shadow
-    private boolean field_22355_ae;
 }
