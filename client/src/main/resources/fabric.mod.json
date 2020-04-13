@@ -3,21 +3,22 @@
   "id": "modloader",
   "version": "${version}",
 
-  "name": "Test Mod",
-  "description": "An Test Mod for Beta",
+  "name": "ModLoader",
+  "description": "It loads mods.",
   "authors": [
-    "calmilamsy"
+    "calmilamsy",
+    "js6pak"
   ],
   "contact": {
-    "sources": "https://github.com/js6pak/beta-example-mod"
+    "sources": "https://github.com/calmilamsy/ModLoader-Fabric"
   },
 
-  "license": "CC0-1.0",
+  "license": "MIT",
   "icon": "assets/modloader/icon.png",
 
   "environment": "*",
   "mixins": [
-    "examplemod.mixins.json"
+    "modloader.mixins.json"
   ],
 
   "depends": {
