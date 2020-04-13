@@ -2,8 +2,8 @@ package net.glasslauncher.modloader;
 
 
 import lombok.Getter;
-import net.glasslauncher.modloader.cachemanager.utils.Classpath;
-import net.glasslauncher.modloader.mixin.CraftingManagerAccessor;
+import net.glasslauncher.utils.Classpath;
+import net.glasslauncher.mixin.CraftingManagerAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.src.*;
 import org.lwjgl.input.Keyboard;
@@ -519,6 +519,7 @@ public class ModLoader {
                 }
             }
 
+            instance.hideQuitButton = false;
             instance.gameSettings.keyBindings = registerAllKeys(instance.gameSettings.keyBindings);
             instance.gameSettings.loadOptions();
             initStats();
