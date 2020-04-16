@@ -1,12 +1,30 @@
 package net.glasslauncher.modloader;
 
 
+import com.google.common.base.Charsets;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 import lombok.Getter;
-import net.glasslauncher.modloader.cachemanager.utils.Classpath;
+import net.fabricmc.loader.launch.common.MappingConfiguration;
+import net.fabricmc.loader.util.mappings.TinyRemapperMappingsHelper;
+import net.fabricmc.mapping.tree.TinyMappingFactory;
+import net.fabricmc.mapping.tree.TinyTree;
+import net.fabricmc.tinyremapper.ClassInstance;
+import net.fabricmc.tinyremapper.OutputConsumerPath;
+import net.fabricmc.tinyremapper.TinyRemapper;
+import net.glasslauncher.modloader.cachemanager.utils.ClassPath;
 import net.glasslauncher.modloader.mixin.CraftingManagerAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.src.*;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Keyboard;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.commons.ClassRemapper;
+import org.objectweb.asm.commons.Remapper;
 
 import javax.imageio.ImageIO;
 import java.io.*;
@@ -14,9 +32,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.net.URLClassLoader;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -419,6 +438,7 @@ public class ModLoader {
         return 0;
     }
 
+    @SuppressWarnings("UnstableApiUsage")
     public static void init() {
         hasInit = true;
         String usedItemSpritesString = "1111111111111111111111111111111111111101111111011111111111111001111111111111111111111111111011111111100110000011111110000000001111111001100000110000000100000011000000010000001100000000000000110000000000000000000000000000000000000000000000001100000000000000";
@@ -498,13 +518,120 @@ public class ModLoader {
             logger.fine("ModLoader Beta 1.7.3 Initializing...");
             System.out.println("ModLoader Beta 1.7.3 Initializing...");
             modDir.mkdirs();
-            //readFromModFolder();
-            for (File path : Objects.requireNonNull(modDir.listFiles())) {
-                Classpath.addURL(path.toURI().toURL());
+            remappedModDir.mkdirs();
+
+            // Mods remapping
+            List<String> modsClasses = new ArrayList<>();
+            HashMap<File, File> modsFiles = new HashMap<>();
+
+            for (File modFile : Objects.requireNonNull(modDir.listFiles())) {
+                String extension = FilenameUtils.getExtension(modFile.getName());
+                if (modFile.isFile() && (extension.equalsIgnoreCase("jar") || extension.equalsIgnoreCase("zip"))) {
+                    modsFiles.put(modFile, new File(remappedModDir, modFile.getName().replace(extension, "remapped.jar")));
+                    ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(modFile));
+                    while (true) {
+                        ZipEntry entry = zipInputStream.getNextEntry();
+                        if (entry == null) {
+                            zipInputStream.close();
+                            break;
+                        }
+
+                        if (!entry.isDirectory()) {
+                            modsClasses.add(entry.getName().replace(".class", ""));
+                        }
+                    }
+                }
             }
-            //File source = new File((Minecraft.class).getProtectionDomain().getCodeSource().getLocation().toURI());
-            for (URL url : ((URLClassLoader) Minecraft.class.getClassLoader().getParent()).getURLs()) {
-                readFromClassPath(new File(url.toURI()), null);
+
+            List<Class<?>> fixPackage = Arrays.asList(BaseMod.class, Config.class, EntityRendererProxy.class, MLProp.class, ModLoader.class, ModTextureAnimation.class, ModTextureStatic.class, StatListWorkAround.class);
+            for (Map.Entry<File, File> entry : modsFiles.entrySet()) {
+                File file = entry.getKey();
+                File remappedFile = entry.getValue();
+
+                if (Files.exists(FileSystems.newFileSystem(file.toPath(), null).getPath("fabric.mod.json"))) {
+                    System.out.println(file.getName() + " is a fabric mod, skipping mapping");
+                    continue;
+                }
+
+                HashCode hash = com.google.common.io.Files.asByteSource(file).hash(Hashing.sha256());
+                File hashFile = new File(remappedModDir, file.getName() + ".sha256");
+
+                if (hashFile.exists() && remappedFile.exists() && HashCode.fromString(FileUtils.readFileToString(hashFile, Charsets.UTF_8)).equals(hash)) {
+                    ClassPath.addURL(remappedFile.toURI().toURL());
+                    System.out.println(file.getName() + " had valid hash, skipping mapping");
+                    continue;
+                }
+
+                TinyTree mappings = TinyMappingFactory.loadWithDetection(new BufferedReader(new InputStreamReader(Objects.requireNonNull(ModLoader.class.getClassLoader().getResourceAsStream("assets/modloader/mappings.tiny")))));
+                TinyTree fabricMappings = new MappingConfiguration().getMappings();
+                mappings.getClasses().addAll(fabricMappings.getClasses());
+                mappings.getDefaultNamespaceClassMap().putAll(fabricMappings.getDefaultNamespaceClassMap());
+
+                Field classesField = TinyRemapper.class.getDeclaredField("classes");
+                classesField.setAccessible(true);
+
+                remapper = TinyRemapper.newRemapper()
+                        .withMappings(TinyRemapperMappingsHelper.create(mappings, "official", "named"))
+                        .extraRemapper(new Remapper() {
+                            @Override
+                            public String map(String internalName) {
+                                Class<?> aClass = fixPackage.stream().filter(c -> c.getSimpleName().equals(internalName)).findAny().orElse(null);
+                                if (aClass != null) {
+                                    return super.map(aClass.getName().replace(".", "/"));
+                                }
+                                return super.map(internalName);
+                            }
+
+                            @Override
+                            public String mapMethodName(String owner, String name, String descriptor) {
+                                boolean fixCasing = fixPackage.stream().anyMatch(c -> c.getSimpleName().equals(owner));
+                                if(!fixCasing) {
+                                    try {
+                                        ClassInstance classInstance = ((Map<String, ClassInstance>) classesField.get(remapper)).get(owner);
+                                        if (classInstance != null) {
+                                            fixCasing = fixPackage.stream().anyMatch(c -> c.getSimpleName().equals(classInstance.getSuperName()));
+                                        }
+                                    } catch (IllegalAccessException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                                if (fixCasing) {
+                                    return super.mapMethodName(owner, StringUtils.uncapitalize(name), descriptor);
+                                }
+                                return super.mapMethodName(owner, name, descriptor);
+                            }
+                        })
+                        .extraAnalyzeVisitor(new ClassVisitor(Opcodes.ASM7, null) {
+                            @Override
+                            public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+                                return new MethodVisitor(Opcodes.ASM7, null) {
+                                    @Override
+                                    public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
+                                        super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
+                                    }
+                                };
+                            }
+                        })
+                        .build();
+                OutputConsumerPath outputConsumer = new OutputConsumerPath.Builder(remappedFile.toPath()).build();
+                outputConsumer.addNonClassFiles(file.toPath());
+                remapper.readClassPath(modsFiles.keySet().stream().filter(x -> x != file).map(File::toPath).toArray(Path[]::new));
+                remapper.readClassPath(Paths.get("libraries", "b1.7.3.jar"), Paths.get("libraries", "ModLoader.jar"));
+                remapper.readInputs(file.toPath());
+
+                remapper.apply(outputConsumer);
+                outputConsumer.close();
+                remapper.finish();
+
+                ClassPath.addURL(remappedFile.toURI().toURL());
+
+                FileUtils.writeStringToFile(hashFile, hash.toString(), Charsets.UTF_8);
+                System.out.println(file.getName() + " remapped successfully!");
+            }
+
+            // Loading mods from classpath
+            for (URL url : ClassPath.getURLs()) {
+                loadMod(new File(url.toURI()), null);
             }
 
             System.out.println("Done.");
@@ -532,6 +659,9 @@ public class ModLoader {
             throw new RuntimeException(e);
         }
     }
+
+    // workaround for accessing remapper inside anonymous class ;-;
+    protected static TinyRemapper remapper;
 
     private static void initStats() {
         Map oneShotStats = StatListWorkAround.getOneShotStats();
@@ -732,7 +862,7 @@ public class ModLoader {
 
     }
 
-    private static void readFromClassPath(File source, File parent) throws IOException {
+    private static void loadMod(File source, File parent) throws IOException {
         logger.finer("Adding mods from " + source.getCanonicalPath());
         ClassLoader loader = (Minecraft.class).getClassLoader();
         if (source.getPath().endsWith(".class")) {
@@ -747,7 +877,7 @@ public class ModLoader {
                 ZipInputStream zip = new ZipInputStream(input);
                 ZipEntry entry = zip.getNextEntry();
                 while (entry != null) {
-                    readFromClassPath(new File(entry.getName()), null);
+                    loadMod(new File(entry.getName()), null);
                     entry = zip.getNextEntry();
                 }
                 zip.close();
@@ -758,48 +888,9 @@ public class ModLoader {
             List<File> files = Files.walk(source.toPath()).filter(Files::isRegularFile).map(Path::toFile).collect(Collectors.toList());
 
             for (File file : files) {
-                readFromClassPath(file, source);
+                loadMod(file, source);
             }
         }
-    }
-
-    private static void readFromModFolder()
-            throws IOException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, SecurityException, NoSuchMethodException {
-        ClassLoader loader = (Minecraft.class).getClassLoader();
-        Method addURL = (URLClassLoader.class).getDeclaredMethod("addURL", java.net.URL.class);
-        addURL.setAccessible(true);
-        if (!ModLoader.modDir.isDirectory()) {
-            throw new IllegalArgumentException("folder must be a Directory.");
-        }
-        File[] sourcefiles = ModLoader.modDir.listFiles();
-
-        if (sourcefiles != null) {
-            for (File source : sourcefiles) {
-                if (source.isFile() && (source.getName().endsWith(".jar") || source.getName().endsWith(".zip"))) {
-                    Classpath.addFile(source);
-                }
-            }
-
-            for (File source : sourcefiles) {
-                if (source.isFile() && (source.getName().endsWith(".jar") || source.getName().endsWith(".zip"))) {
-                    logger.finer("Adding mods from " + source.getCanonicalPath());
-                    InputStream input = new FileInputStream(source);
-                    ZipInputStream zip = new ZipInputStream(input);
-                    ZipEntry entry = zip.getNextEntry();
-                    while (entry != null) {
-                        String name = entry.getName().replace("\\", "/");
-                        String[] parts = name.split("/");
-                        if (!entry.isDirectory() && parts[parts.length - 1].startsWith("mod_") && name.endsWith(".class")) {
-                            addMod(loader, name.replace("/", "."));
-                        }
-                        entry = zip.getNextEntry();
-                    }
-                    zip.close();
-                    input.close();
-                }
-            }
-        }
-
     }
 
     public static KeyBinding[] registerAllKeys(KeyBinding w[]) {
@@ -1139,6 +1230,7 @@ public class ModLoader {
     public static void throwException(String message, Throwable e) {
         Minecraft game = getMinecraftInstance();
         if (game != null) {
+            e.printStackTrace();
             game.displayUnexpectedThrowable(new UnexpectedThrowable(message, e));
         } else {
             throw new RuntimeException(e);
@@ -1179,8 +1271,8 @@ public class ModLoader {
     private static FileHandler logHandler = null;
     private static Method method_RegisterEntityID = null;
     private static Method method_RegisterTileEntity = null;
-    private static final File modDir = new File(Minecraft.getMinecraftDir(), "/mods/");
-    private static final File remappedModDir = new File(modDir, "/remappedmods/");
+    private static final File modDir = new File(Minecraft.getMinecraftDir(), "mods");
+    private static final File remappedModDir = new File(modDir, "remapped");
     private static final LinkedList modList = new LinkedList();
     private static int nextBlockModelID = 1000;
     private static final Map overrides = new HashMap();

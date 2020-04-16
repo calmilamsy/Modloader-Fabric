@@ -1,5 +1,6 @@
 buildscript {
     repositories {
+        mavenLocal()
         jcenter()
         maven {
             name = "Fabric"
@@ -52,8 +53,8 @@ subprojects {
         compileOnly 'org.projectlombok:lombok:1.18.12'
         annotationProcessor 'org.projectlombok:lombok:1.18.12'
 
-        testCompileOnly 'org.projectlombok:lombok:1.18.12'
-        testAnnotationProcessor 'org.projectlombok:lombok:1.18.12'
+        compileOnly 'org.projectlombok:lombok:1.18.12'
+        annotationProcessor 'org.projectlombok:lombok:1.18.12'
         implementation 'me.lucko:jar-relocator:1.4'
     }
 
