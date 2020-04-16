@@ -5,9 +5,12 @@
   "mixins": [
   ],
   "client": [
+    "EntityAccessor",
+    "GuiScreenAccessor",
     "CraftingManagerAccessor",
     "EntityLivingAccessor",
     "EntityPlayerAccessor",
+    "audiomod.MixinAudioMod",
     "modloader.MixinBlockDispenser",
     "modloader.MixinChunkProvider",
     "modloader.MixinEntityItem",
@@ -17,8 +20,7 @@
     "modloader.MixinSlotCrafting",
     "modloader.MixinSlotFurnace",
     "modloader.MixinTileEntityFurnace",
-    "playerapi.MixinEntityPlayerSP",
-    "audiomod.MixinAudioMod"
+    "playerapi.MixinEntityPlayerSP"
   ],
   "injectors": {
     "defaultRequire": 1
