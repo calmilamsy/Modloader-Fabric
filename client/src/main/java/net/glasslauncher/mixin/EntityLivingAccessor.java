@@ -8,4 +8,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface EntityLivingAccessor {
     @Accessor
     boolean isIsJumping();
+    @Accessor
+    float getMoveForward();
+    @Accessor
+    float getMoveStrafing();
 }
