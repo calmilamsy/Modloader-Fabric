@@ -12,8 +12,12 @@ import net.fabricmc.mapping.tree.TinyTree;
 import net.fabricmc.tinyremapper.ClassInstance;
 import net.fabricmc.tinyremapper.OutputConsumerPath;
 import net.fabricmc.tinyremapper.TinyRemapper;
-import net.glasslauncher.modloader.cachemanager.utils.ClassPath;
-import net.glasslauncher.modloader.mixin.CraftingManagerAccessor;
+import net.glasslauncher.Config;
+import net.glasslauncher.mixin.CraftingManagerAccessor;
+import net.glasslauncher.playerapi.EntityPlayerSPAccessor;
+import net.glasslauncher.playerapi.PlayerAPI;
+import net.glasslauncher.playerapi.PlayerBase;
+import net.glasslauncher.utils.ClassPath;
 import net.minecraft.client.Minecraft;
 import net.minecraft.src.*;
 import org.apache.commons.io.FileUtils;
@@ -46,6 +50,81 @@ import java.util.zip.ZipInputStream;
 
 public class ModLoader {
 
+    public static final boolean DEBUG = false;
+
+    /* BEGIN MODLOADER */
+    public static final Properties props = new Properties();
+    public static final String VERSION = "ModLoader Beta 1.7.3";
+    private static final List animList = new LinkedList();
+    private static final Map blockModels = new HashMap();
+    private static final Map blockSpecialInv = new HashMap();
+    private static final File cfgdir;
+    private static final File cfgfile;
+    private static final Map inGameHooks = new HashMap();
+    private static final Map inGUIHooks = new HashMap();
+    private static final Map keyList = new HashMap();
+    private static final File logfile = new File(Minecraft.getMinecraftDir(), "ModLoader.txt");
+    private static final Logger logger = Logger.getLogger("ModLoader");
+    private static final File modDir = new File(Minecraft.getMinecraftDir(), "/mods/");
+    private static final File remappedModDir = new File(modDir, "/remapped/");
+    private static final LinkedList<BaseMod> modList = new LinkedList<>();
+    private static final Map overrides = new HashMap();
+    private static final boolean[] usedItemSprites = new boolean[256];
+    private static final boolean[] usedTerrainSprites = new boolean[256];
+    public static Level cfgLoggingLevel;
+    public static boolean hasInit = false;
+    private static Map classMap = null;
+    private static long clock = 0L;
+    private static Field field_animList = null;
+    private static Field field_armorList = null;
+    private static Field field_blockList = null;
+    private static Field field_modifiers = null;
+    private static Field field_TileEntityRenderers = null;
+    private static int highestEntityId = 3000;
+    private static Minecraft instance = null;
+    private static int itemSpriteIndex = 0;
+    private static int itemSpritesLeft = 0;
+    private static FileHandler logHandler = null;
+    private static Method method_RegisterEntityID = null;
+    private static Method method_RegisterTileEntity = null;
+    private static int nextBlockModelID = 1000;
+    private static BiomeGenBase[] standardBiomes;
+    private static int terrainSpriteIndex = 0;
+    private static int terrainSpritesLeft = 0;
+    private static String texPack = null;
+    private static boolean texturesAdded = false;
+    @Getter
+    private static float[][] redstoneColors;
+
+    static {
+        cfgdir = new File(Minecraft.getMinecraftDir(), "/config/");
+        cfgfile = new File(cfgdir, "ModLoader.cfg");
+        cfgLoggingLevel = Level.FINER;
+
+        redstoneColors = new float[16][];
+        for (int i = 0; i < redstoneColors.length; i++) {
+            float j = (float) i / 15F;
+            float red = j * 0.6F + 0.4F;
+            if (i == 0) {
+                j = 0.0F;
+            }
+            float green = j * j * 0.7F - 0.5F;
+            float blue = j * j * 0.6F - 0.7F;
+            if (green < 0.0F) {
+                green = 0.0F;
+            }
+            if (blue < 0.0F) {
+                blue = 0.0F;
+            }
+            redstoneColors[i] = (new float[]{
+                    red, green, blue
+            });
+        }
+    }
+
+    private ModLoader() {
+    }
+
     public static void setRedstoneColors(float[][] colors) {
         if (colors.length != 16) {
             throw new IllegalArgumentException("Must be 16 colors.");
@@ -58,8 +137,6 @@ public class ModLoader {
 
         redstoneColors = colors;
     }
-
-    /* BEGIN MODLOADER */
 
     public static void addAchievementDesc(Achievement achievement, String name, String description) {
         try {
@@ -542,7 +619,10 @@ public class ModLoader {
                 }
             }
 
-            List<Class<?>> fixPackage = Arrays.asList(BaseMod.class, Config.class, EntityRendererProxy.class, MLProp.class, ModLoader.class, ModTextureAnimation.class, ModTextureStatic.class, StatListWorkAround.class);
+            List<Class<?>> fixPackage = Arrays.asList(
+                    BaseMod.class, Config.class, EntityRendererProxy.class, MLProp.class, ModLoader.class, ModTextureAnimation.class, ModTextureStatic.class, StatListWorkAround.class,
+                    EntityPlayerSPAccessor.class, PlayerAPI.class, PlayerBase.class
+                    );
             for (Map.Entry<File, File> entry : modsFiles.entrySet()) {
                 File file = entry.getKey();
                 File remappedFile = entry.getValue();
@@ -607,6 +687,7 @@ public class ModLoader {
                                             super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/ClassLoader", "getParent", "()Ljava/lang/ClassLoader;", false);
                                         }
                                     }
+
                                     @Override
                                     public void visitLdcInsn(Object value) {
                                         // mine_diver dumbie
@@ -655,6 +736,7 @@ public class ModLoader {
                 }
             }
 
+            instance.hideQuitButton = false;
             instance.gameSettings.keyBindings = registerAllKeys(instance.gameSettings.keyBindings);
             instance.gameSettings.loadOptions();
             initStats();
@@ -679,21 +761,21 @@ public class ModLoader {
             if (!oneShotStats.containsKey(0x1000000 + id) && Block.blocksList[id] != null && Block.blocksList[id].getEnableStats()) {
                 String str = StringTranslate.getInstance().translateKeyFormat("stat.mineBlock", Block.blocksList[id].translateBlockName());
                 StatList.mineBlockStatArray[id] = (new StatCrafting(0x1000000 + id, str, id)).registerStat();
-                StatList.objectMineStats.add(StatList.mineBlockStatArray[id]);
+                StatList.field_25185_d.add(StatList.mineBlockStatArray[id]);
             }
         }
 
         for (int id = 0; id < Item.itemsList.length; id++) {
             if (!oneShotStats.containsKey(0x1020000 + id) && Item.itemsList[id] != null) {
                 String str = StringTranslate.getInstance().translateKeyFormat("stat.useItem", Item.itemsList[id].getStatName());
-                StatList.objectUseStats[id] = (new StatCrafting(0x1020000 + id, str, id)).registerStat();
+                StatList.field_25172_A[id] = (new StatCrafting(0x1020000 + id, str, id)).registerStat();
                 if (id >= Block.blocksList.length) {
-                    StatList.itemStats.add(StatList.objectUseStats[id]);
+                    StatList.field_25186_c.add(StatList.field_25172_A[id]);
                 }
             }
             if (!oneShotStats.containsKey(0x1030000 + id) && Item.itemsList[id] != null && Item.itemsList[id].isDamagable()) {
                 String str = StringTranslate.getInstance().translateKeyFormat("stat.breakItem", Item.itemsList[id].getStatName());
-                StatList.objectBreakStats[id] = (new StatCrafting(0x1030000 + id, str, id)).registerStat();
+                StatList.field_25170_B[id] = (new StatCrafting(0x1030000 + id, str, id)).registerStat();
             }
         }
 
@@ -711,7 +793,7 @@ public class ModLoader {
             int id = (Integer) iterator2.next();
             if (!oneShotStats.containsKey(0x1010000 + id) && Item.itemsList[id] != null) {
                 String str = StringTranslate.getInstance().translateKeyFormat("stat.craftItem", Item.itemsList[id].getStatName());
-                StatList.objectCraftStats[id] = (new StatCrafting(0x1010000 + id, str, id)).registerStat();
+                StatList.field_25158_z[id] = (new StatCrafting(0x1010000 + id, str, id)).registerStat();
             }
         }
 
@@ -1248,79 +1330,5 @@ public class ModLoader {
 
     private static void throwException(Throwable e) {
         throwException("Exception occured in ModLoader", e);
-    }
-
-    private ModLoader() {
-    }
-
-    private static final List animList = new LinkedList();
-    private static final Map blockModels = new HashMap();
-    private static final Map blockSpecialInv = new HashMap();
-    private static final File cfgdir;
-    private static final File cfgfile;
-    public static Level cfgLoggingLevel;
-    private static Map classMap = null;
-    private static long clock = 0L;
-    public static final boolean DEBUG = false;
-    private static Field field_animList = null;
-    private static Field field_armorList = null;
-    private static Field field_blockList = null;
-    private static Field field_modifiers = null;
-    private static Field field_TileEntityRenderers = null;
-    public static boolean hasInit = false;
-    private static int highestEntityId = 3000;
-    private static final Map inGameHooks = new HashMap();
-    private static final Map inGUIHooks = new HashMap();
-    private static Minecraft instance = null;
-    private static int itemSpriteIndex = 0;
-    private static int itemSpritesLeft = 0;
-    private static final Map keyList = new HashMap();
-    private static final File logfile = new File(Minecraft.getMinecraftDir(), "ModLoader.txt");
-    private static final Logger logger = Logger.getLogger("ModLoader");
-    private static FileHandler logHandler = null;
-    private static Method method_RegisterEntityID = null;
-    private static Method method_RegisterTileEntity = null;
-    private static final File modDir = new File(Minecraft.getMinecraftDir(), "mods");
-    private static final File remappedModDir = new File(modDir, "remapped");
-    private static final LinkedList modList = new LinkedList();
-    private static int nextBlockModelID = 1000;
-    private static final Map overrides = new HashMap();
-    public static final Properties props = new Properties();
-    private static BiomeGenBase[] standardBiomes;
-    private static int terrainSpriteIndex = 0;
-    private static int terrainSpritesLeft = 0;
-    private static String texPack = null;
-    private static boolean texturesAdded = false;
-    private static final boolean[] usedItemSprites = new boolean[256];
-    private static final boolean[] usedTerrainSprites = new boolean[256];
-    public static final String VERSION = "ModLoader Beta 1.7.3";
-
-    @Getter
-    private static float[][] redstoneColors;
-
-    static {
-        cfgdir = new File(Minecraft.getMinecraftDir(), "/config/");
-        cfgfile = new File(cfgdir, "ModLoader.cfg");
-        cfgLoggingLevel = Level.FINER;
-
-        redstoneColors = new float[16][];
-        for (int i = 0; i < redstoneColors.length; i++) {
-            float j = (float) i / 15F;
-            float red = j * 0.6F + 0.4F;
-            if (i == 0) {
-                j = 0.0F;
-            }
-            float green = j * j * 0.7F - 0.5F;
-            float blue = j * j * 0.6F - 0.7F;
-            if (green < 0.0F) {
-                green = 0.0F;
-            }
-            if (blue < 0.0F) {
-                blue = 0.0F;
-            }
-            redstoneColors[i] = (new float[]{
-                    red, green, blue
-            });
-        }
     }
 }

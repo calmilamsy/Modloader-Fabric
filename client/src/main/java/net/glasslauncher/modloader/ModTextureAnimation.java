@@ -16,10 +16,13 @@ import java.awt.image.BufferedImage;
 
 public class ModTextureAnimation extends TextureFX {
 
+    private final int tickRate;
+    private final byte[][] images;
+    private int index;
+    private int ticks;
     public ModTextureAnimation(int slot, int dst, BufferedImage source, int rate) {
         this(slot, 1, dst, source, rate);
     }
-
     public ModTextureAnimation(int slot, int size, int dst, BufferedImage source, int rate) {
         super(slot);
         index = 0;
@@ -75,9 +78,4 @@ public class ModTextureAnimation extends TextureFX {
         }
         ticks++;
     }
-
-    private final int tickRate;
-    private final byte[][] images;
-    private int index;
-    private int ticks;
 }

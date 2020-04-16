@@ -7,6 +7,6 @@ import java.util.Map;
 public class StatListWorkAround extends StatList {
 
     public static Map getOneShotStats() {
-        return oneShotStats;
+        return field_25169_C;
     }
 }

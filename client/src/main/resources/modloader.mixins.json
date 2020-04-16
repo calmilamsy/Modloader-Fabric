@@ -1,16 +1,13 @@
 {
   "required": true,
-  "package": "net.glasslauncher.modloader.mixin",
+  "package": "net.glasslauncher.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
   ],
   "client": [
     "CraftingManagerAccessor",
-    "fixes.MixinFixResources",
-    "fixes.MixinFixAuth",
-    "fixes.MixinFixPlayerSkins",
-    "fixes.MixinFixDepthBuffer",
-    "fixes.MixinFixThreadCheckHasPaid",
+    "EntityLivingAccessor",
+    "EntityPlayerAccessor",
     "modloader.MixinBlockDispenser",
     "modloader.MixinChunkProvider",
     "modloader.MixinEntityItem",
@@ -19,7 +16,9 @@
     "modloader.MixinRenderManager",
     "modloader.MixinSlotCrafting",
     "modloader.MixinSlotFurnace",
-    "modloader.MixinTileEntityFurnace"
+    "modloader.MixinTileEntityFurnace",
+    "playerapi.MixinEntityPlayerSP",
+    "audiomod.MixinAudioMod"
   ],
   "injectors": {
     "defaultRequire": 1

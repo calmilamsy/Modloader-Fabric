@@ -16,6 +16,9 @@ import java.awt.image.BufferedImage;
 
 public class ModTextureStatic extends TextureFX {
 
+    private boolean oldanaglyph;
+    private int[] pixels;
+
     public ModTextureStatic(int slot, int dst, BufferedImage source) {
         this(slot, 1, dst, source);
     }
@@ -42,31 +45,6 @@ public class ModTextureStatic extends TextureFX {
             source.getRGB(0, 0, width, height, pixels, 0, width);
         }
         update();
-    }
-
-    public void update() {
-        for (int i = 0; i < pixels.length; i++) {
-            int a = pixels[i] >> 24 & 0xff;
-            int r = pixels[i] >> 16 & 0xff;
-            int g = pixels[i] >> 8 & 0xff;
-            int b = pixels[i] >> 0 & 0xff;
-            if (anaglyphEnabled) {
-                int grey = (r + g + b) / 3;
-                r = g = b = grey;
-            }
-            imageData[i * 4 + 0] = (byte) r;
-            imageData[i * 4 + 1] = (byte) g;
-            imageData[i * 4 + 2] = (byte) b;
-            imageData[i * 4 + 3] = (byte) a;
-        }
-
-        oldanaglyph = anaglyphEnabled;
-    }
-
-    public void onTick() {
-        if (oldanaglyph != anaglyphEnabled) {
-            update();
-        }
     }
 
     public static BufferedImage scale2x(BufferedImage in) {
@@ -126,6 +104,28 @@ public class ModTextureStatic extends TextureFX {
         return out;
     }
 
-    private boolean oldanaglyph;
-    private int[] pixels;
+    public void update() {
+        for (int i = 0; i < pixels.length; i++) {
+            int a = pixels[i] >> 24 & 0xff;
+            int r = pixels[i] >> 16 & 0xff;
+            int g = pixels[i] >> 8 & 0xff;
+            int b = pixels[i] >> 0 & 0xff;
+            if (anaglyphEnabled) {
+                int grey = (r + g + b) / 3;
+                r = g = b = grey;
+            }
+            imageData[i * 4 + 0] = (byte) r;
+            imageData[i * 4 + 1] = (byte) g;
+            imageData[i * 4 + 2] = (byte) b;
+            imageData[i * 4 + 3] = (byte) a;
+        }
+
+        oldanaglyph = anaglyphEnabled;
+    }
+
+    public void onTick() {
+        if (oldanaglyph != anaglyphEnabled) {
+            update();
+        }
+    }
 }

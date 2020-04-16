@@ -13,6 +13,8 @@ import net.minecraft.src.EntityRenderer;
 
 public class EntityRendererProxy extends EntityRenderer {
 
+    private Minecraft game;
+
     public EntityRendererProxy(Minecraft minecraft) {
         super(minecraft);
         game = minecraft;
@@ -22,6 +24,4 @@ public class EntityRendererProxy extends EntityRenderer {
         super.updateCameraAndRender(f1);
         ModLoader.onTick(game);
     }
-
-    private Minecraft game;
 }
