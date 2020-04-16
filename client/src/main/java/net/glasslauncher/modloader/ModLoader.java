@@ -20,7 +20,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Keyboard;
-import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.ClassRemapper;
@@ -567,9 +566,6 @@ public class ModLoader {
                 mappings.getClasses().addAll(fabricMappings.getClasses());
                 mappings.getDefaultNamespaceClassMap().putAll(fabricMappings.getDefaultNamespaceClassMap());
 
-                Field classesField = TinyRemapper.class.getDeclaredField("classes");
-                classesField.setAccessible(true);
-
                 remapper = TinyRemapper.newRemapper()
                         .withMappings(TinyRemapperMappingsHelper.create(mappings, "official", "named"))
                         .extraRemapper(new Remapper() {
@@ -585,14 +581,10 @@ public class ModLoader {
                             @Override
                             public String mapMethodName(String owner, String name, String descriptor) {
                                 boolean fixCasing = fixPackage.stream().anyMatch(c -> c.getSimpleName().equals(owner));
-                                if(!fixCasing) {
-                                    try {
-                                        ClassInstance classInstance = ((Map<String, ClassInstance>) classesField.get(remapper)).get(owner);
-                                        if (classInstance != null) {
-                                            fixCasing = fixPackage.stream().anyMatch(c -> c.getSimpleName().equals(classInstance.getSuperName()));
-                                        }
-                                    } catch (IllegalAccessException e) {
-                                        e.printStackTrace();
+                                if (!fixCasing) {
+                                    ClassInstance classInstance = remapper.getClasses().get(owner);
+                                    if (classInstance != null) {
+                                        fixCasing = fixPackage.stream().anyMatch(c -> c.getSimpleName().equals(classInstance.getSuperName()));
                                     }
                                 }
                                 if (fixCasing) {
@@ -601,17 +593,34 @@ public class ModLoader {
                                 return super.mapMethodName(owner, name, descriptor);
                             }
                         })
-                        .extraAnalyzeVisitor(new ClassVisitor(Opcodes.ASM7, null) {
+                        .extraVisitor((visitor, remapper1) -> new ClassRemapper(visitor, remapper1) {
                             @Override
-                            public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-                                return new MethodVisitor(Opcodes.ASM7, null) {
+                            protected MethodVisitor createMethodRemapper(MethodVisitor mv) {
+                                return new MethodVisitor(Opcodes.ASM7, mv) {
                                     @Override
                                     public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
                                         super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
+
+                                        // Workaround for mods accessing URLClassLoader and fabric's classloader
+                                        if (owner.equals("java/lang/Class") && name.equals("getClassLoader") && descriptor.equals("()Ljava/lang/ClassLoader;")) {
+                                            System.out.println("injecting getParent to classloader");
+                                            super.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/ClassLoader", "getParent", "()Ljava/lang/ClassLoader;", false);
+                                        }
+                                    }
+                                    @Override
+                                    public void visitLdcInsn(Object value) {
+                                        // mine_diver dumbie
+                                        if (value.equals("net.minecraft.src.")) {
+                                            super.visitLdcInsn("");
+                                            return;
+                                        }
+
+                                        super.visitLdcInsn(value);
                                     }
                                 };
                             }
                         })
+                        .extraClassNameMapper((tinyRemapper, def) -> def)
                         .build();
                 OutputConsumerPath outputConsumer = new OutputConsumerPath.Builder(remappedFile.toPath()).build();
                 outputConsumer.addNonClassFiles(file.toPath());

@@ -53,9 +53,7 @@ subprojects {
         compileOnly 'org.projectlombok:lombok:1.18.12'
         annotationProcessor 'org.projectlombok:lombok:1.18.12'
 
-        compileOnly 'org.projectlombok:lombok:1.18.12'
-        annotationProcessor 'org.projectlombok:lombok:1.18.12'
-        implementation 'me.lucko:jar-relocator:1.4'
+        compile 'com.github.js6pak:Tiny-Remapper:master-SNAPSHOT'
     }
 
     minecraft {
