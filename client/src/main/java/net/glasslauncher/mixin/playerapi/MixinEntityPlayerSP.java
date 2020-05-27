@@ -1,5 +1,6 @@
 package net.glasslauncher.mixin.playerapi;
 
+import net.glasslauncher.mixin.EntityPlayerAccessor;
 import net.glasslauncher.playerapi.EntityPlayerSPAccessor;
 import net.glasslauncher.playerapi.PlayerAPI;
 import net.minecraft.client.Minecraft;
@@ -17,7 +18,7 @@ import java.util.List;
 import java.util.Random;
 
 @Mixin(EntityPlayerSP.class)
-public abstract class MixinEntityPlayerSP extends EntityPlayer implements EntityPlayerSPAccessor {
+public abstract class MixinEntityPlayerSP extends EntityPlayer implements EntityPlayerAccessor, EntityPlayerSPAccessor {
 
     @Shadow
     private MouseFilter field_21903_bJ;
@@ -43,7 +44,6 @@ public abstract class MixinEntityPlayerSP extends EntityPlayer implements Entity
         playerBases = PlayerAPI.playerInit((EntityPlayerSP) (Object) this);
     }
 
-    @Override
     public List getPlayerBases() {
         return playerBases;
     }
@@ -137,6 +137,7 @@ public abstract class MixinEntityPlayerSP extends EntityPlayer implements Entity
 
     // TODO: onItemPickup
 
+
     @Redirect(method = "getPlayerArmorValue", at = @At(value = "INVOKE", target = "Lnet/minecraft/src/InventoryPlayer;getTotalArmorValue()I"))
     private int redirectGetPlayerArmorValue(InventoryPlayer inventoryPlayer) {
         return PlayerAPI.getPlayerArmorValue((EntityPlayerSP) (Object) this, inventoryPlayer.getTotalArmorValue());
@@ -171,11 +172,6 @@ public abstract class MixinEntityPlayerSP extends EntityPlayer implements Entity
         if (PlayerAPI.pushOutOfBlocks((EntityPlayerSP) (Object) this, v, v1, v2)) {
             cir.setReturnValue(false);
         }
-    }
-
-    @Override
-    public float getEntityBrightness(float v) {
-        return PlayerAPI.getEntityBrightness((EntityPlayerSP) (Object) this, v, super.getEntityBrightness(v));
     }
 
     @Override
@@ -260,6 +256,7 @@ public abstract class MixinEntityPlayerSP extends EntityPlayer implements Entity
         moveForward = newMoveForward;
         isJumping = newIsJumping;
     }
+
 
     @Override
     public boolean isInsideOfMaterial(Material material) {

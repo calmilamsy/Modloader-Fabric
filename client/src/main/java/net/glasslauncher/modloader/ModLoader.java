@@ -1,6 +1,5 @@
 package net.glasslauncher.modloader;
 
-
 import com.google.common.base.Charsets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
@@ -14,6 +13,7 @@ import net.fabricmc.tinyremapper.OutputConsumerPath;
 import net.fabricmc.tinyremapper.TinyRemapper;
 import net.glasslauncher.Config;
 import net.glasslauncher.mixin.CraftingManagerAccessor;
+import net.glasslauncher.modloadermp.*;
 import net.glasslauncher.playerapi.EntityPlayerSPAccessor;
 import net.glasslauncher.playerapi.PlayerAPI;
 import net.glasslauncher.playerapi.PlayerBase;
@@ -514,9 +514,69 @@ public class ModLoader {
         return 0;
     }
 
+    /*
+    private static final byte[] readFully(InputStream stream) {
+        try {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream(stream.available());
+            int r;
+            while ((r = stream.read()) != -1)
+                bos.write(r);
+
+            return bos.toByteArray();
+        } catch (Throwable t) {
+            return new byte[0];
+        }
+    }
+
+    private static final byte[] getClassBytes(String name) throws IOException {
+        InputStream classStream = null;
+        try {
+            URL classResource = ModLoader.class.getResource(name.replace('.', '/').concat(".class"));
+            if (classResource == null)
+                return null;
+            classStream = classResource.openStream();
+            return readFully(classStream);
+        }
+        finally {
+            if (classStream != null)
+                try {
+                    classStream.close();
+                } catch (IOException e) {}
+        }
+    }
+
+    private static byte[] transformClass(byte[] bytes) {
+        ClassNode classNode = new ClassNode();
+        ClassReader classReader = new ClassReader(bytes);
+        classReader.accept(classNode, 0);
+        String parentEntityRenderer = Tool.class.getName().replace(".", "/");
+        for (MethodNode method : classNode.methods) {
+            Iterator<AbstractInsnNode> insns = method.instructions.iterator();
+            for (AbstractInsnNode insn = insns.next();insns.hasNext();insn = insns.next())
+                if (insn.getOpcode() == INVOKESPECIAL && ((MethodInsnNode)insn).owner.equals(classNode.superName))
+                    ((MethodInsnNode)insn).owner = parentEntityRenderer;
+        }
+        classNode.superName = parentEntityRenderer;
+        ClassWriter classWriter = new ClassWriter(0);
+        classNode.accept(classWriter);
+        bytes = classWriter.toByteArray();
+        return bytes;
+    }*/
+
     @SuppressWarnings("UnstableApiUsage")
     public static void init() {
         hasInit = true;
+        /*try {
+            transformClass(getClassBytes(ItemTool.class.getName().replace(".", "/")));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        org.apache.logging.log4j.Logger[] loggers = new org.apache.logging.log4j.Logger[]{};
+        loggerContext.getLoggers().toArray(loggers);
+        for (org.apache.logging.log4j.Logger newLogger : loggers) {
+            newLogger.
+        }*/
+
         String usedItemSpritesString = "1111111111111111111111111111111111111101111111011111111111111001111111111111111111111111111011111111100110000011111110000000001111111001100000110000000100000011000000010000001100000000000000110000000000000000000000000000000000000000000000001100000000000000";
         String usedTerrainSpritesString = "1111111111111111111111111111110111111111111111111111110111111111111111111111000111111011111111111111001111111110111111111111100011111111000010001111011110000000111111000000000011111100000000001111000000000111111000000000001101000000000001111111111111000011";
         for (int i = 0; i < 256; i++) {
@@ -595,10 +655,15 @@ public class ModLoader {
             System.out.println("ModLoader Beta 1.7.3 Initializing...");
             modDir.mkdirs();
             remappedModDir.mkdirs();
+            (new File("libraries")).mkdirs();
 
             // Mods remapping
             List<String> modsClasses = new ArrayList<>();
             HashMap<File, File> modsFiles = new HashMap<>();
+
+            if (!(new File("libraries/ModLoader.jar")).exists()) {
+                net.glasslauncher.utils.FileUtils.downloadFile("https://files.pymcl.net/client/b1.7.3/ModLoader.jar", "libraries");
+            }
 
             for (File modFile : Objects.requireNonNull(modDir.listFiles())) {
                 String extension = FilenameUtils.getExtension(modFile.getName());
@@ -620,8 +685,9 @@ public class ModLoader {
             }
 
             List<Class<?>> fixPackage = Arrays.asList(
-                    BaseMod.class, Config.class, EntityRendererProxy.class, MLProp.class, ModLoader.class, ModTextureAnimation.class, ModTextureStatic.class, StatListWorkAround.class,
-                    EntityPlayerSPAccessor.class, PlayerAPI.class, PlayerBase.class
+                    BaseMod.class, EntityRendererProxy.class, MLProp.class, ModLoader.class, ModTextureAnimation.class, ModTextureStatic.class, StatListWorkAround.class, // ModLoader
+                    EntityPlayerSPAccessor.class, PlayerAPI.class, PlayerBase.class, // PlayerAPI
+                    BaseModMp.class, ISpawnable.class, ModLoaderMp.class, NetClientHandlerEntity.class, Packet230ModLoader.class // ModLoaderMP
                     );
             for (Map.Entry<File, File> entry : modsFiles.entrySet()) {
                 File file = entry.getKey();
@@ -721,7 +787,12 @@ public class ModLoader {
 
             // Loading mods from classpath
             for (URL url : ClassPath.getURLs()) {
-                loadMod(new File(url.toURI()), null);
+                try {
+                    loadMod(new File(url.toURI()), null);
+                } catch (Exception e) {
+                    System.out.println("WARN: Failed to check \"" + url + "\" for mods.");
+                    e.printStackTrace();
+                }
             }
 
             System.out.println("Done.");
@@ -919,7 +990,7 @@ public class ModLoader {
         clock = newclock;
     }
 
-    public static void OpenGUI(EntityPlayer player, GuiScreen gui) {
+    public static void openGUI(EntityPlayer player, GuiScreen gui) {
         if (!hasInit) {
             init();
             logger.fine("Initialized");

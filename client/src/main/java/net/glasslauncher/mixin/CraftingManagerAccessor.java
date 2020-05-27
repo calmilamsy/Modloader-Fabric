@@ -13,5 +13,4 @@ public interface CraftingManagerAccessor {
 
     @Invoker
     void callAddRecipe(ItemStack var1, Object... var2);
-
 }

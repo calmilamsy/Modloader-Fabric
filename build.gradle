@@ -21,7 +21,14 @@ buildscript {
     }
 }
 
+plugins {
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+}
+
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 subprojects {
+    apply plugin: 'com.github.johnrengelman.shadow'
     apply plugin: 'maven-publish'
     apply plugin: 'fabric-loom'
 
@@ -90,6 +97,20 @@ subprojects {
 
     jar {
         from "LICENSE"
+    }
+
+    shadowJar {
+        classifier = "use"
+        dependencies {
+            include(dependency('com.github.js6pak:Tiny-Remapper:master-SNAPSHOT'))
+        }
+        from sourceSets.main.output
+        relocate "net.fabricmc", "net.glasslauncher.internal"
+    }
+
+    task copyDeps(type:Copy) {
+        into "test"
+        from configurations.compile
     }
 
     remapJar {

@@ -20,4 +20,25 @@ public abstract class MixinMinecraft {
         }
         checkGLError(text);
     }
+
+    /*
+    @Inject(method = "main", at = @At(value = "HEAD"))
+    private static void loadMyShit(String[] strings, CallbackInfo ci) {
+        ClassTinkerers.addReplacement("net/minecraft/src/ItemTool", (classNode) -> {
+            try {
+                String parentEntityRenderer = Tool.class.getName().replace(".", "/");
+                for (MethodNode method : classNode.methods) {
+                    Iterator<AbstractInsnNode> insns = method.instructions.iterator();
+                    for (AbstractInsnNode insn = insns.next();insns.hasNext();insn = insns.next())
+                        if (insn.getOpcode() == INVOKESPECIAL && ((MethodInsnNode)insn).owner.equals(classNode.superName))
+                            ((MethodInsnNode)insn).owner = parentEntityRenderer;
+                }
+                classNode.superName = parentEntityRenderer;
+                ClassWriter classWriter = new ClassWriter(0);
+                classNode.accept(classWriter);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }*/
 }

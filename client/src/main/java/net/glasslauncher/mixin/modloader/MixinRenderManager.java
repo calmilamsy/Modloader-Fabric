@@ -20,10 +20,10 @@ public class MixinRenderManager {
 
     @Inject(method = "<init>()V", at = @At(value = "TAIL"))
     public void init(CallbackInfo ci) {
+        ModLoader.addAllRenderers(entityRenderMap);
 
         Iterator iterator = entityRenderMap.values().iterator();
 
-        ModLoader.addAllRenderers(entityRenderMap);
         while (iterator.hasNext()) {
             Render var2 = (Render) iterator.next();
             var2.setRenderManager((RenderManager) (Object) this);

@@ -3,14 +3,21 @@
   "package": "net.glasslauncher.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "modloadermp.MixinGuiConnectFailed",
+    "modloadermp.MixinPacket255KickDisconnect"
   ],
   "client": [
-    "EntityAccessor",
-    "GuiScreenAccessor",
     "CraftingManagerAccessor",
+    "EntityAccessor",
     "EntityLivingAccessor",
     "EntityPlayerAccessor",
+    "GuiScreenAccessor",
     "audiomod.MixinAudioMod",
+    "fixes.MixinFixAuth",
+    "fixes.MixinFixDepthBuffer",
+    "fixes.MixinFixPlayerSkins",
+    "fixes.MixinFixResources",
+    "fixes.MixinFixThreadCheckHasPaid",
     "modloader.MixinBlockDispenser",
     "modloader.MixinChunkProvider",
     "modloader.MixinEntityItem",

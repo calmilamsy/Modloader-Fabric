@@ -5,9 +5,8 @@ minecraft {
 dependencies {
     //to change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}-server"
-    mappings loom.mcp(loom.BETA, "${project.minecraft_version}.server-LTS", "https://github.com/ModificationStation/1.7.3-LTS/archive/master.zip") {
+    mappings loom.mcp(loom.BETA, "${project.minecraft_version}.${project.archives_base_name}.${project.name}", "http://files.pymcl.net/archive/mcp/bin/mcp43.zip") {
         spec ->
             spec.side = 1
-            spec.conf = "1.7.3-LTS-master/conf/b1.7.3"
     }
 }
