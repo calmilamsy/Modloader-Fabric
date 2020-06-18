@@ -1,144 +1,101 @@
 buildscript {
-    repositories {
-        mavenLocal()
-        jcenter()
-        maven {
-            name = "Fabric"
-            url = "https://maven.fabricmc.net/"
-        }
-        maven {
-            name = "Forge"
-            url = "https://files.minecraftforge.net/maven/"
-        }
-        maven {
-            name = "Jitpack"
-            url = "https://jitpack.io/"
-        }
-    }
-    dependencies {
-        //Sin² Edition Loom
-        classpath 'com.github.js6pak:fabric-loom:beta_mcp-SNAPSHOT'
-    }
+	repositories {
+		mavenCentral()
+		jcenter()
+		maven {
+			name = "Fabric"
+			url = "https://maven.fabricmc.net/"
+		}
+		maven {
+			name = "Jitpack"
+			url 'https://jitpack.io/'
+		}
+	}
+	dependencies {
+		classpath 'com.github.Chocohead:Fabric-Loom:bbaa5d7'
+	}
 }
 
 plugins {
-    id 'com.github.johnrengelman.shadow' version '5.2.0'
+	id 'checkstyle'
 }
 
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+apply plugin: "fabric-loom"
 
-subprojects {
-    apply plugin: 'com.github.johnrengelman.shadow'
-    apply plugin: 'maven-publish'
-    apply plugin: 'fabric-loom'
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
 
-    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
+archivesBaseName = project.archives_base_name
+version = project.mod_version
+group = project.maven_group
 
-    archivesBaseName = project.archives_base_name
-    version = project.mod_version
-    group = project.maven_group
+repositories {
+	maven {
+		name = "Jitpack"
+		url "https://jitpack.io/"
+	}
+}
 
-    repositories {
-        mavenLocal()
-        maven {
-            name = 'Jitpack'
-            url = 'https://jitpack.io/'
-        }
-    }
+minecraft {
+}
 
-    dependencies {
-//        modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-        modImplementation 'com.github.js6pak:fabric-loader:fix~beta-server-version-SNAPSHOT' // temporary fix for b1.7.3 server version parsing
+dependencies {
+	// fabric loader requires log4j, guava, and gson
+	implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.1'
+	implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.8.1'
+	implementation 'com.google.guava:guava:28.0-jre'
+	implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.6'
 
-        compile 'com.google.code.gson:gson:2.8.6'
-        compile 'com.google.guava:guava:28.2-jre'
-        compile 'commons-io:commons-io:2.5'
-        compile 'org.apache.commons:commons-lang3:3.9'
-        compile 'org.apache.logging.log4j:log4j-api:2.13.0'
-        compile 'org.apache.logging.log4j:log4j-core:2.13.0'
+	// mixin and fabric loader need asm 8
+	implementation 'org.ow2.asm:asm:8.0'
+	implementation 'org.ow2.asm:asm-analysis:8.0'
+	implementation 'org.ow2.asm:asm-commons:8.0'
+	implementation 'org.ow2.asm:asm-tree:8.0'
+	implementation 'org.ow2.asm:asm-util:8.0'
 
-        compileOnly 'org.projectlombok:lombok:1.18.12'
-        annotationProcessor 'org.projectlombok:lombok:1.18.12'
+	compile group: 'commons-io', name: 'commons-io', version: '2.7'
+	compile "com.github.calmilamsy:tiny-remapper:2cac61"
+	compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.10'
+	compileOnly 'org.projectlombok:lombok:1.18.12'
+	annotationProcessor 'org.projectlombok:lombok:1.18.12'
 
-        compile 'com.github.js6pak:Tiny-Remapper:master-SNAPSHOT'
-    }
+	//to change the versions see the gradle.properties file
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 
-    minecraft {
-        customManifest = "https://gist.githubusercontent.com/js6pak/d02e251fa888cbd89ca958ae7007a207/raw/5154f0161c9bb6149fc876c508da3f4544fdd140/b1.7.3-server.json"
-    }
+	mappings loom.fromCommit("calmilamsy/BIN-Mappings", "${project.yarn_mappings}") {spec ->
+		spec.version = "b1.7.3-${project.yarn_mappings}"
+	}
 
-    processResources {
-        inputs.property "version", project.version
+	// for config api
+	compile "tk.valoeghese:ZoesteriaConfig:1.3.2"
 
-        from(sourceSets.main.resources.srcDirs) {
-            include "fabric.mod.json"
-            expand "version": project.version
-        }
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+}
 
-        from(sourceSets.main.resources.srcDirs) {
-            exclude "fabric.mod.json"
-        }
-    }
+processResources {
+	inputs.property "version", project.version
 
-    // ensure that the encoding is set to UTF-8, no matter what the system default is
-    // this fixes some edge cases with special characters not displaying correctly
-    // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
-    tasks.withType(JavaCompile) {
-        options.encoding = "UTF-8"
-    }
+	from(sourceSets.main.resources.srcDirs) {
+		include "fabric.mod.json"
+		expand "version": project.version
+	}
 
-    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-    // if it is present.
-    // If you remove this task, sources will not be generated.
-    task sourcesJar(type: Jar, dependsOn: classes) {
-        classifier = "sources"
-        from sourceSets.main.allSource
-    }
+	from(sourceSets.main.resources.srcDirs) {
+		exclude "fabric.mod.json"
+	}
+}
 
-    jar {
-        from "LICENSE"
-    }
+// ensure that the encoding is set to UTF-8, no matter what the system default is
+// this fixes some edge cases with special characters not displaying correctly
+// see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
+tasks.withType(JavaCompile) {
+	options.encoding = "UTF-8"
+}
 
-    shadowJar {
-        classifier = "use"
-        dependencies {
-            include(dependency('com.github.js6pak:Tiny-Remapper:master-SNAPSHOT'))
-        }
-        from sourceSets.main.output
-        relocate "net.fabricmc", "net.glasslauncher.internal"
-    }
-
-    task copyDeps(type:Copy) {
-        into "test"
-        from configurations.compile
-    }
-
-    remapJar {
-        toMappings = 'official'
-    }
-
-    // configure the maven publication
-    publishing {
-        publications {
-            mavenJava(MavenPublication) {
-                artifactId = "modloader-${project.getName()}"
-                // add all the jars that should be included when publishing to maven
-                artifact(remapJar) {
-                    builtBy remapJar
-                }
-                artifact(jar) {
-                    builtBy jar
-                }
-                artifact(sourcesJar) {
-                    builtBy remapSourcesJar
-                }
-            }
-        }
-
-        // select the repositories you want to publish to
-        repositories {
-            // uncomment to publish to the local maven
-            mavenLocal()
-        }
-    }
+// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+// if it is present.
+// If you remove this task, sources will not be generated.
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = "sources"
+	from sourceSets.main.allSource
 }

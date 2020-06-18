@@ -1,0 +1,34 @@
+{
+  "required": true,
+  "package": "net.glasslauncher.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "CraftingManagerAccessor",
+    "EntityAccessor",
+    "EntityLivingAccessor",
+    "EntityPlayerAccessor",
+    "GuiScreenAccessor",
+    "audiomod.MixinAudioMod",
+    "fixes.MixinFixAuth",
+    "fixes.MixinFixDepthBuffer",
+    "fixes.MixinFixPlayerSkins",
+    "fixes.MixinFixResources",
+    "fixes.MixinFixThreadCheckHasPaid",
+    "modloader.MixinBlockDispenser",
+    "modloader.MixinChunkProvider",
+    "modloader.MixinEntityItem",
+    "modloader.MixinMinecraft",
+    "modloader.MixinRenderBlocks",
+    "modloader.MixinRenderManager",
+    "modloader.MixinSlotCrafting",
+    "modloader.MixinSlotFurnace",
+    "modloader.MixinTileEntityFurnace",
+    "playerapi.MixinEntityPlayerSP",
+    "modloadermp.MixinGuiConnectFailed",
+    "modloadermp.MixinNetClientHandler",
+    "modloadermp.MixinPacket255KickDisconnect"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

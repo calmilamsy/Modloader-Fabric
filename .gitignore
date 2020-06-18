@@ -5,6 +5,10 @@ build/
 out/
 classes/
 
+# eclipse
+
+*.launch
+
 # idea
 
 .idea/
@@ -22,4 +26,4 @@ bin/
 
 # fabric
 
-client/run/
+run/

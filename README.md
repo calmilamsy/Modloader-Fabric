@@ -5,7 +5,7 @@ It loads mods, but not fabric mods.
 
 ### TO MAKE MODLOADER MODS:
 
-- Download the [example project](https://github.com/calmilamsy/beta-example-mod/tree/client%2Bserver).
+- Download the [example project](https://github.com/calmilamsy/BIN-fabric-example-mod).
 
 - Download the latest modloader-dev jar from [releases](https://github.com/calmilamsy/modloader-fabric/releases).
 

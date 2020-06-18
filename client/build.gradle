@@ -1,9 +1,0 @@
-minecraft {
-    side = "client"
-}
-
-dependencies {
-    //to change the versions see the gradle.properties file
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings loom.mcp(loom.BETA, "${project.minecraft_version}.${project.archives_base_name}.${project.name}", "http://files.pymcl.net/archive/mcp/bin/mcp43.zip")
-}
