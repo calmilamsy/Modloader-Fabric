@@ -23,10 +23,10 @@
     "modloader.MixinSlotCrafting",
     "modloader.MixinSlotFurnace",
     "modloader.MixinTileEntityFurnace",
-    "playerapi.MixinEntityPlayerSP",
     "modloadermp.MixinGuiConnectFailed",
     "modloadermp.MixinNetClientHandler",
-    "modloadermp.MixinPacket255KickDisconnect"
+    "modloadermp.MixinPacket255KickDisconnect",
+    "playerapi.MixinEntityPlayerSP"
   ],
   "injectors": {
     "defaultRequire": 1

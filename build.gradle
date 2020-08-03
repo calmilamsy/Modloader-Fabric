@@ -10,6 +10,10 @@ buildscript {
 			name = "Jitpack"
 			url 'https://jitpack.io/'
 		}
+		maven {
+			name = "glass"
+			url "https://maven.glass-launcher.net/gradle-release"
+		}
 	}
 	dependencies {
 		classpath 'com.github.Chocohead:Fabric-Loom:bbaa5d7'
@@ -34,6 +38,10 @@ repositories {
 		name = "Jitpack"
 		url "https://jitpack.io/"
 	}
+	maven {
+		name = "glass"
+		url "https://maven.glass-launcher.net/gradle-release"
+	}
 }
 
 minecraft {
@@ -54,9 +62,10 @@ dependencies {
 	implementation 'org.ow2.asm:asm-util:8.0'
 
 	compile group: 'commons-io', name: 'commons-io', version: '2.7'
-	compile "com.github.calmilamsy:tiny-remapper:2cac61"
+	compile "com.github.js6pak:tiny-remapper:dab60ea"
 	compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.10'
 	compileOnly 'org.projectlombok:lombok:1.18.12'
+	compile group:"net.glasslauncher.repo", name:"api", version:"1.0"
 	annotationProcessor 'org.projectlombok:lombok:1.18.12'
 
 	//to change the versions see the gradle.properties file

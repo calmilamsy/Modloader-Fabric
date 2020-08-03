@@ -6,14 +6,13 @@ import com.google.common.hash.Hashing;
 import lombok.Getter;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.customtinyremapper.IMappingProvider;
 import net.fabricmc.loader.launch.common.MappingConfiguration;
 import net.fabricmc.loader.util.mappings.TinyRemapperMappingsHelper;
 import net.fabricmc.mapping.tree.TinyMappingFactory;
 import net.fabricmc.mapping.tree.TinyTree;
-import net.fabricmc.customtinyremapper.ClassInstance;
-import net.fabricmc.customtinyremapper.OutputConsumerPath;
-import net.fabricmc.customtinyremapper.TinyRemapper;
+import net.fabricmc.tinyremapper.ClassInstance;
+import net.fabricmc.tinyremapper.OutputConsumerPath;
+import net.fabricmc.tinyremapper.TinyRemapper;
 import net.glasslauncher.mixin.CraftingManagerAccessor;
 import net.glasslauncher.modloadermp.*;
 import net.glasslauncher.playerapi.ClientPlayerAccessor;
@@ -21,13 +20,12 @@ import net.glasslauncher.playerapi.PlayerAPI;
 import net.glasslauncher.utils.ClassPath;
 import net.minecraft.achievement.Achievement;
 import net.minecraft.block.BlockBase;
-import net.minecraft.class_98;
 import net.minecraft.client.GameStartupError;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.StatEntity;
 import net.minecraft.client.TexturePackManager;
 import net.minecraft.client.gui.screen.ScreenBase;
 import net.minecraft.client.options.KeyBinding;
-import net.minecraft.client.render.RenderHelper;
 import net.minecraft.client.render.TextureBinder;
 import net.minecraft.client.render.TileRenderer;
 import net.minecraft.client.render.entity.PlayerRenderer;
@@ -41,6 +39,7 @@ import net.minecraft.entity.player.PlayerBase;
 import net.minecraft.item.ItemBase;
 import net.minecraft.item.ItemInstance;
 import net.minecraft.item.PlaceableTileEntity;
+import net.minecraft.item.tool.ToolBase;
 import net.minecraft.level.TileView;
 import net.minecraft.level.Level;
 import net.minecraft.level.biome.Biome;
@@ -58,12 +57,19 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Keyboard;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.Remapper;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
 
 import javax.imageio.ImageIO;
+import javax.tools.Tool;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -80,6 +86,8 @@ import java.util.logging.SimpleFormatter;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
 
 public class ModLoader {
 
@@ -409,8 +417,8 @@ public class ModLoader {
                 boolean exists = false;
                 for (Iterator iterator = list.iterator(); iterator.hasNext(); ) {
                     EntityEntry entry = (EntityEntry) iterator.next();
-                    if (entry.field_1142 == entityClass) {
-                        entry.field_1143 = weightedProb;
+                    if (entry.entryClass == entityClass) {
+                        entry.rarity = weightedProb;
                         exists = true;
                         break;
                     }
@@ -560,7 +568,6 @@ public class ModLoader {
         return 0;
     }
 
-    /*
     private static final byte[] readFully(InputStream stream) {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream(stream.available());
@@ -607,18 +614,18 @@ public class ModLoader {
         classNode.accept(classWriter);
         bytes = classWriter.toByteArray();
         return bytes;
-    }*/
+    }
 
     @Environment(EnvType.CLIENT)
     @SuppressWarnings("UnstableApiUsage")
     public static void init() {
         hasInit = true;
-        /*try {
-            transformClass(getClassBytes(ItemTool.class.getName().replace(".", "/")));
+        try {
+            transformClass(getClassBytes(ToolBase.class.getName().replace(".", "/")));
         } catch (Exception e) {
             e.printStackTrace();
         }
-        org.apache.logging.log4j.Logger[] loggers = new org.apache.logging.log4j.Logger[]{};
+        /*org.apache.logging.log4j.Logger[] loggers = new org.apache.logging.log4j.Logger[]{};
         loggerContext.getLoggers().toArray(loggers);
         for (org.apache.logging.log4j.Logger newLogger : loggers) {
             newLogger.
@@ -712,6 +719,10 @@ public class ModLoader {
                 net.glasslauncher.utils.FileUtils.downloadFile("https://files.pymcl.net/client/b1.7.3/ModLoader.jar", "libraries");
             }
 
+            if (!(new File("libraries/b1.7.3.jar")).exists()) {
+                net.glasslauncher.utils.FileUtils.downloadFile("https://launcher.mojang.com/v1/objects/43db9b498cb67058d2e12d394e6507722e71bb45/client.jar", "libraries", null, "b1.7.3.jar");
+            }
+
             for (File modFile : Objects.requireNonNull(modDir.listFiles())) {
                 String extension = FilenameUtils.getExtension(modFile.getName());
                 if (modFile.isFile() && (extension.equalsIgnoreCase("jar") || extension.equalsIgnoreCase("zip"))) {
@@ -732,8 +743,8 @@ public class ModLoader {
             }
 
             List<Class<?>> fixPackage = Arrays.asList(
-                    BaseMod.class, EntityRendererProxy.class, MLProp.class, ModLoader.class, ModTextureAnimation.class, ModTextureStatic.class, StatListWorkAround.class, // ModLoader
-                    ClientPlayerAccessor.class, PlayerAPI.class, PlayerBase.class, // PlayerAPI
+                    BaseMod.class, EntityRendererProxy.class, MLProp.class, ModLoader.class, ModTextureAnimation.class, ModTextureStatic.class, // ModLoader
+                    PlayerAPI.class, PlayerBase.class, // PlayerAPI
                     BaseModMp.class, ISpawnable.class, ModLoaderMp.class, NetClientHandlerEntity.class, Packet230ModLoader.class // ModLoaderMP
                     );
             for (Map.Entry<File, File> entry : modsFiles.entrySet()) {
@@ -760,7 +771,7 @@ public class ModLoader {
                 mappings.getDefaultNamespaceClassMap().putAll(fabricMappings.getDefaultNamespaceClassMap());
 
                 remapper = TinyRemapper.newRemapper()
-                        .withMappings((IMappingProvider) TinyRemapperMappingsHelper.create(mappings, "official", "named"))
+                        .withMappings(TinyRemapperMappingsHelper.create(mappings, "official", "named"))
                         .extraRemapper(new Remapper() {
                             @Override
                             public String map(String internalName) {
@@ -819,7 +830,7 @@ public class ModLoader {
                 OutputConsumerPath outputConsumer = new OutputConsumerPath.Builder(remappedFile.toPath()).build();
                 outputConsumer.addNonClassFiles(file.toPath());
                 remapper.readClassPath(modsFiles.keySet().stream().filter(x -> x != file).map(File::toPath).toArray(Path[]::new));
-                remapper.readClassPath(Paths.get("libraries", "b1.7.3.jar"), Paths.get("libraries", "ModLoader.jar"));
+                remapper.readClassPath(Paths.get("libraries", "b1.7.3.jar"), Paths.get("libraries", "ModLoader.jar"), Paths.get("libraries", "ModLoaderMP.jar"), Paths.get("libraries", "PlayerAPI.jar"));
                 remapper.readInputs(file.toPath());
 
                 remapper.apply(outputConsumer);
@@ -876,9 +887,9 @@ public class ModLoader {
         Map oneShotStats = StatListWorkAround.getOneShotStats();
 
         for (int id = 0; id < BlockBase.BY_ID.length; id++) {
-            if (!oneShotStats.containsKey(0x1000000 + id) && BlockBase.BY_ID[id] != null && BlockBase.BY_ID[id].method_1598()) {
+            if (!oneShotStats.containsKey(0x1000000 + id) && BlockBase.BY_ID[id] != null && BlockBase.BY_ID[id].isStatEnabled()) {
                 String str = TranslationStorage.getInstance().translate("stat.mineBlock", BlockBase.BY_ID[id].getTranslatedName());
-                Stats.STAT_MINE_BLOCK[id] = (new class_98(0x1000000 + id, str, id)).register();
+                Stats.STAT_MINE_BLOCK[id] = (new StatEntity(0x1000000 + id, str, id)).register();
                 Stats.field_818.add(Stats.STAT_MINE_BLOCK[id]);
             }
         }
@@ -886,14 +897,14 @@ public class ModLoader {
         for (int id = 0; id < ItemBase.byId.length; id++) {
             if (!oneShotStats.containsKey(0x1020000 + id) && ItemBase.byId[id] != null) {
                 String str = TranslationStorage.getInstance().translate("stat.useItem", ItemBase.byId[id].getTranslatedName());
-                Stats.useItem[id] = (new class_98(0x1020000 + id, str, id)).register();
+                Stats.useItem[id] = (new StatEntity(0x1020000 + id, str, id)).register();
                 if (id >= BlockBase.BY_ID.length) {
                     Stats.field_817.add(StatListWorkAround.useItem[id]);
                 }
             }
             if (!oneShotStats.containsKey(0x1030000 + id) && ItemBase.byId[id] != null && ItemBase.byId[id].method_465()) {
                 String str = TranslationStorage.getInstance().translate("stat.breakItem", ItemBase.byId[id].getTranslatedName());
-                Stats.breakItem[id] = (new class_98(0x1030000 + id, str, id)).register();
+                Stats.breakItem[id] = (new StatEntity(0x1030000 + id, str, id)).register();
             }
         }
 
@@ -911,7 +922,7 @@ public class ModLoader {
             int id = (Integer) iterator2.next();
             if (!oneShotStats.containsKey(0x1010000 + id) && ItemBase.byId[id] != null) {
                 String str = TranslationStorage.getInstance().translate("stat.craftItem", ItemBase.byId[id].getTranslatedName());
-                Stats.field_809[id] = (new class_98(0x1010000 + id, str, id)).register();
+                Stats.field_809[id] = (new StatEntity(0x1010000 + id, str, id)).register();
             }
         }
 
@@ -1248,7 +1259,7 @@ public class ModLoader {
             if (list != null) {
                 for (Iterator iter = list.iterator(); iter.hasNext(); ) {
                     EntityEntry entry = (EntityEntry) iter.next();
-                    if (entry.field_1142 == entityClass) {
+                    if (entry.entryClass == entityClass) {
                         iter.remove();
                     }
                 }

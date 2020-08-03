@@ -15,9 +15,9 @@ import net.minecraft.client.level.ClientLevel;
 import net.minecraft.entity.*;
 import net.minecraft.entity.player.AbstractClientPlayer;
 import net.minecraft.entity.projectile.Arrow;
+import net.minecraft.entity.projectile.Egg;
+import net.minecraft.entity.projectile.Fireball;
 import net.minecraft.entity.projectile.Snowball;
-import net.minecraft.entity.projectile.ThrownEgg;
-import net.minecraft.entity.projectile.ThrownSnowball;
 import net.minecraft.network.ClientPlayNetworkHandler;
 import net.minecraft.network.PacketHandler;
 import net.minecraft.packet.play.EntitySpawnS2C;
@@ -68,16 +68,16 @@ public abstract class MixinNetClientHandler extends PacketHandler {
       }
 
       if(packet23vehiclespawn.id == 61) {
-         obj = new ThrownSnowball(this.level, d, d1, d2);
+         obj = new Snowball(this.level, d, d1, d2);
       }
 
       if(packet23vehiclespawn.id == 63) {
-         obj = new Snowball(this.level, d, d1, d2, (double)packet23vehiclespawn.field_1667 / 8000.0D, (double)packet23vehiclespawn.field_1668 / 8000.0D, (double)packet23vehiclespawn.field_1669 / 8000.0D);
+         obj = new Fireball(this.level, d, d1, d2, (double)packet23vehiclespawn.field_1667 / 8000.0D, (double)packet23vehiclespawn.field_1668 / 8000.0D, (double)packet23vehiclespawn.field_1669 / 8000.0D);
          packet23vehiclespawn.field_1671 = 0;
       }
 
       if(packet23vehiclespawn.id == 62) {
-         obj = new ThrownEgg(this.level, d, d1, d2);
+         obj = new Egg(this.level, d, d1, d2);
       }
 
       if(packet23vehiclespawn.id == 1) {

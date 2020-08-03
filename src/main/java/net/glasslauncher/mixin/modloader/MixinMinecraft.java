@@ -16,11 +16,11 @@ public abstract class MixinMinecraft {
 
     @Environment(EnvType.CLIENT)
     @Redirect(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;printOpenGLError(Ljava/lang/String;)V"))
-    public void startGame(Minecraft minecraft, String text) {
+    public void startGame(Minecraft minecraft, String errorName) {
         if (!ModLoader.hasInit) {
             ModLoader.init();
         }
-        printOpenGLError(text);
+        printOpenGLError(errorName);
     }
 
     /*

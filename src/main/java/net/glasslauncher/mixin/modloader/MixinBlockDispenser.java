@@ -5,8 +5,8 @@ import net.minecraft.block.Dispenser;
 import net.minecraft.entity.EntityBase;
 import net.minecraft.entity.Item;
 import net.minecraft.entity.projectile.Arrow;
-import net.minecraft.entity.projectile.ThrownEgg;
-import net.minecraft.entity.projectile.ThrownSnowball;
+import net.minecraft.entity.projectile.Egg;
+import net.minecraft.entity.projectile.Snowball;
 import net.minecraft.item.ItemBase;
 import net.minecraft.item.ItemInstance;
 import net.minecraft.level.Level;
@@ -51,16 +51,16 @@ public class MixinBlockDispenser {
                 if (localiz.itemId == ItemBase.arrow.id) {
                     Arrow localObject = new Arrow(paramfd, d1, d2, d3);
                     localObject.setPositionAndAngles(j, 0.10000000149011611D, k, 1.1F, 6F);
-                    localObject.player = true;
+                    localObject.spawnedByPlayer = true;
                     paramfd.spawnEntity(localObject);
                     paramfd.playLevelEvent(1002, paramInt1, paramInt2, paramInt3, 0);
                 } else if (localiz.itemId == ItemBase.egg.id) {
-                    ThrownEgg localObject = new ThrownEgg(paramfd, d1, d2, d3);
+                    Egg localObject = new Egg(paramfd, d1, d2, d3);
                     localObject.setPositionAndAngles(j, 0.10000000149011611D, k, 1.1F, 6F);
                     paramfd.spawnEntity(localObject);
                     paramfd.playLevelEvent(1002, paramInt1, paramInt2, paramInt3, 0);
                 } else if (localiz.itemId == ItemBase.snowball.id) {
-                    ThrownSnowball localObject = new ThrownSnowball(paramfd, d1, d2, d3);
+                    Snowball localObject = new Snowball(paramfd, d1, d2, d3);
                     localObject.setPositionAndAngles(j, 0.10000000149011611D, k, 1.1F, 6F);
                     paramfd.spawnEntity(localObject);
                     paramfd.playLevelEvent(1002, paramInt1, paramInt2, paramInt3, 0);

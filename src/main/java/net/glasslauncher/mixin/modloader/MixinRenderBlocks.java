@@ -84,7 +84,6 @@ public abstract class MixinRenderBlocks {
     @Inject(method = "<init>(Lnet/minecraft/level/TileView;)V", at = @At(value = "RETURN"))
     public void initIBlockAccess(TileView iBlockAccess, CallbackInfo callbackInfo) {
         this.field_82 = iBlockAccess;
-        this.field_82 = null;
         this.field_83 = 0;
         this.field_84 = false;
         this.field_85 = false;
@@ -243,7 +242,6 @@ public abstract class MixinRenderBlocks {
     @Environment(EnvType.CLIENT)
     @Redirect(method = "method_57", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockBase;method_1616(Lnet/minecraft/level/TileView;III)V"))
     public void renderBlockByRenderType(BlockBase block, TileView iBlockAccess, int i, int i1, int i2) {
-        System.out.println("Eat shit");
         block.method_1616(this.field_82, i, i1, i2);
         ModLoader.renderWorldBlock((TileRenderer) (Object) this, field_82, i, i1, i2, block, block.method_1621());
     }
