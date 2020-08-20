@@ -40,7 +40,7 @@ repositories {
 	}
 	maven {
 		name = "glass"
-		url "https://maven.glass-launcher.net/gradle-release"
+		url "https://maven.glass-launcher.net/repo"
 	}
 }
 
@@ -65,7 +65,7 @@ dependencies {
 	compile "com.github.js6pak:tiny-remapper:dab60ea"
 	compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.10'
 	compileOnly 'org.projectlombok:lombok:1.18.12'
-	compile group:"net.glasslauncher.repo", name:"api", version:"1.0"
+	compile group:"net.glasslauncher", name:"commons", version:"1.0"
 	annotationProcessor 'org.projectlombok:lombok:1.18.12'
 
 	//to change the versions see the gradle.properties file
